@@ -3,13 +3,12 @@ import pymysql
 import pandas as pd
 from lib.Thegraph import *
 from lib.FeatureLib import *
-
+from tqdm import tqdm
 
 datas = pd.read_csv('./files/Pairs_v2.5.csv',encoding='utf-8-sig').to_dict('records')
-datas = datas[0:20]
 error_list = []
 
-for data in datas:
+for data in tqdm(datas,desc="processing rate"):
     try:
         # Feature Part 1
 #        holders = get_holders(data['id'])
@@ -62,11 +61,9 @@ for data in datas:
         data['burn_ratio'] = burn_ratio
         data['creator_ratio'] = creator_ratio
 
-    except ZeroDivisionError as e:
+    
+    except Exception as e:
         data['error'] = e
         print(e)
-    except Exception as e:
-        print(type(e))
-        error_list.append(data)
 
-pd.DataFrame(datas).to_csv('pairs_v2.6.csv',encoding='utf-8-sig',index=False)
+pd.DataFrame(datas).to_csv('./drive/MyDrive/pairs_v2.6.csv',encoding='utf-8-sig',index=False)
