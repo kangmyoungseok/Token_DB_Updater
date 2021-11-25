@@ -1,11 +1,8 @@
 import pymysql 
 import pandas as pd
 
-<<<<<<< HEAD
 conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', charset='utf8mb4') 
-=======
-conn = pymysql.connect(host='localhost', user='root', password='bobai123', charset='utf8mb4') 
->>>>>>> 0798d4f6573107af9ec183814b2a5dac4d52f656
+
 cursor = conn.cursor() 
 
 #DB 만들기
@@ -21,7 +18,6 @@ cursor = conn.cursor()
 
 
 ## 테이블 만들기
-<<<<<<< HEAD
 sql = '''CREATE TABLE pair_info (
     id char(50) NOT NULL PRIMARY KEY,
     token0_name varchar(250),
@@ -36,53 +32,16 @@ sql = '''CREATE TABLE pair_info (
     created_at_timestamp char(15),
     is_change Bool,
     is_scam Bool
-=======
-sql = '''CREATE TABLE pairInfo (
-    id char(50) NOT NULL PRIMARY KEY,
-    stoken0Name varchar(50),
-    stoken1Name varchr(50),
-    stoken00Id char(50) NOT NULL,
-    stoken00Name varchar(100),
-    stoken00Symbol varchar(100),
-    stoken00Creator char(50),
-    itoken00Decimals int,
-    nreserveETH float,
-    itxCount int,
-    screatedAtTimestamp char(15),
-    bisChange Bool,
-    bisScam Bool,
->>>>>>> 0798d4f6573107af9ec183814b2a5dac4d52f656
-) CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-''' 
-##
+    '''
 cursor.execute(sql) 
 
 
 #API로 데이터 불러오고
-<<<<<<< HEAD
 datas = pd.read_csv('./files/Pairs_v2.7.csv',encoding='utf-8-sig').to_dict('records')
 
 sql = '''
 INSERT INTO pair_info(id, token0_name,token1_name, token00_id, token00_name, token00_symbol, token00_creator, token00_decimals, reserve_ETH, tx_count, created_at_timestamp, is_change, is_scam) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 '''
-=======
-datas = pd.read_csv('Pairs_v2.6.csv',encoding='utf-8-sig').to_dict('records')
-
-#예제...
-#sql = "delete from pair_info;"
-#sql = "ALTER TABLE table_name MODIFY COLUMN ex_column varchar(16) NULL;"
-#sql = "ALTER table pair_INFO modify column name varchar(100);"
-#sql = "Alter table pair_INfo modify column symbol varchar(100);"
-#sql = "INSERT INTO user (email, department) VALUES (%s, %s)"
-#cursor.execute(sql)
-
-#저장하기 .. 
-sql = '''
-INSERT INTO Pair_INFO(id, stoken0Name,stoken1Name, stoken00Id, stoken00Name, stoken00Symbol, stoken00Creator, stoken00Decimals, nreserveETH, itxCount, screatedAtTimestamp, bisChange, bisScam) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-'''
-
-
->>>>>>> 0798d4f6573107af9ec183814b2a5dac4d52f656
 for data in datas:
     try:
         id = data['id']
@@ -106,7 +65,6 @@ for data in datas:
 
 conn.commit()
 conn.close() 
-<<<<<<< HEAD
 
 
 
@@ -176,5 +134,3 @@ for data in datas:
 
 conn.commit()
 conn.close() 
-=======
->>>>>>> 0798d4f6573107af9ec183814b2a5dac4d52f656
