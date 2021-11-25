@@ -99,6 +99,9 @@ swap_query_template = '''
       to
       sender
       timestamp
+      transaction{
+        id
+      }
  }
 }
 ''' 
@@ -112,6 +115,9 @@ burn_query_template = '''
       to
       sender
       timestamp
+      transaction{
+        id
+      }
  }
 }
 ''' 
