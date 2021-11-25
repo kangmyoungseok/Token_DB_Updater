@@ -20,8 +20,8 @@ for data in tqdm(datas,desc="processing"):
     count = count+1
     #중간저장
     if( int(count % 5000) == 0 ):
-        pd.DataFrame(datas).to_csv('./drive/MyDrive/pairs_v2.8.csv',encoding='utf-8-sig',index=False)
-        pd.DataFrame(scam_list).to_csv('./drive/MyDrive/scam_v1.0.csv',encoding='utf-8-sig',index=False)
+        pd.DataFrame(datas).to_csv('./drive/MyDrive/Pairs_v2.8.csv',encoding='utf-8-sig',index=False)
+        pd.DataFrame(scam_list).to_csv('./drive/MyDrive/Scam_v1.0.csv',encoding='utf-8-sig',index=False)
     if(data['reserveETH'] > 1):
         data['is_scam'] = False
         continue
@@ -45,5 +45,5 @@ for data in tqdm(datas,desc="processing"):
     except Exception as e:
         print(e)
 
-pd.DataFrame(datas).to_csv('./drive/MyDrive/pairs_v2.8.csv',encoding='utf-8-sig',index=False)
-pd.DataFrame(scam_list).to_csv('./drive/MyDrive/scam_v1.0.csv',encoding='utf-8-sig',index=False)
+pd.DataFrame(datas).to_csv('./drive/MyDrive/Pairs_v2.8.csv',encoding='utf-8-sig',index=False)
+pd.DataFrame(scam_list).to_csv('./drive/MyDrive/Scam_v1.0.csv',encoding='utf-8-sig',index=False)
