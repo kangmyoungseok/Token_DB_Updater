@@ -47,7 +47,7 @@ for data in datas:
         
 conn.commit()
 
-datas[0]
+
 #2. 새로 추가된 토큰들에 대해서 Feature 구함
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor()
@@ -56,7 +56,7 @@ INSERT INTO ai_feature(token_id, pair_id, mint_count, swap_count, burn_count, ac
 mint_mean_period, swap_mean_period, burn_mean_period, swap_in, swap_out, lp_lock_ratio, lp_avg, lp_std, 
 lp_creator_holding_ratio, burn_ratio, token_creator_holding_ratio ) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 '''
-data = datas[0]
+
 for data in datas:
     try:
         token_id = data['token00.id']
@@ -115,10 +115,19 @@ for data in datas:
     else:
         break
 datas = datas2
+cursor.close()
+
+
 
 #datas 에는 생긴지 3일 이내의 토큰들의 pair_info 테이블 정보가 들어있다.
 #먼저 기존과 비교해서 트랜잭션이 발생한 애들만 추가로 Feature를 뽑아야 하니까 Thegraph에서 tx를 가져와야 한다.
 #4. 기존 DB에 있는 데이터가 추가적인 트랜잭션이 발생했는지 검사 data['is_change']
+
+conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
+cursor = conn.cursor()
+sql = '''
+UPDATE pair_info set tx_count = %s where id=%s
+'''
 
 query = query_iter % datas[-1]['created_at_timestamp']
 result = run_query(query)
@@ -129,11 +138,13 @@ tx_list = {}
 for pair in pairs:
     tx_list[pair['id']] = int(pair['txCount'])
  
+
 for data in datas:
     try:
         if(data['tx_count'] == tx_list[data['id']]):
             data['is_change'] = False
         else:
+            cursor.execute(sql,(tx_list[data['id']],data['id']))
             data['is_change'] = True
     except Exception as e:
         print(e)
@@ -150,7 +161,7 @@ mint_mean_period = %s, swap_mean_period = %s, burn_mean_period=%s, swap_in = %s,
 , lp_avg = %s, lp_std = %s, lp_creator_holding_ratio = %s, burn_ratio = %s, token_creator_holding_ratio = %s where 
 token_id = %s
 '''
-data = datas[0]
+
 for data in datas:
     if( (data['is_change'] == True )and (data['is_scam'] == False) ):
         try:
