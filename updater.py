@@ -3,7 +3,7 @@ import pymysql
 import pandas as pd
 from lib.Thegraph import *
 from lib.FeatureLib import *
-
+from decimal import Decimal
 
 #1. 기존 파일에 존재하는 가장 최신 토큰이후에 생긴 토큰 DB에 추가
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
@@ -126,7 +126,7 @@ cursor.close()
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor()
 sql = '''
-UPDATE pair_info set tx_count = %s where id=%s
+UPDATE pair_info set tx_count = %s,reserve_ETH = %s where id=%s
 '''
 
 query = query_iter % datas[-1]['created_at_timestamp']
@@ -136,15 +136,16 @@ pairs = result['data']['pairs']
 
 tx_list = {}
 for pair in pairs:
-    tx_list[pair['id']] = int(pair['txCount'])
+    tx_list[pair['id']] = [int(pair['txCount']) , Decimal(pair['reserveETH'])]
  
 
 for data in datas:
     try:
-        if(data['tx_count'] == tx_list[data['id']]):
+        tx_count,reserveETH = tx_list[data['id']]
+        if(data['tx_count'] == tx_count):
             data['is_change'] = False
         else:
-            cursor.execute(sql,(tx_list[data['id']],data['id']))
+            cursor.execute(sql,(tx_count,reserveETH,data['id']))
             data['is_change'] = True
     except Exception as e:
         print(e)
