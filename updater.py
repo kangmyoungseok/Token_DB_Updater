@@ -6,7 +6,7 @@ from lib.FeatureLib import *
 
 
 #1. 기존 파일에 존재하는 가장 최신 토큰이후에 생긴 토큰 DB에 추가
-conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', db='bobai3', charset='utf8mb4') 
+conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 sql = "select * from pair_info order by created_at_timestamp desc limit 0,1"
 cursor.execute(sql)
@@ -49,7 +49,7 @@ conn.commit()
 
 datas[0]
 #2. 새로 추가된 토큰들에 대해서 Feature 구함
-conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', db='bobai3', charset='utf8mb4') 
+conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor()
 sql = '''
 INSERT INTO ai_feature(token_id, pair_id, mint_count, swap_count, burn_count, active_period, 
@@ -100,7 +100,7 @@ conn.close()
 ## 여기까지가 그냥 새로운 애들 추가해서 넣는 거고, 아래부터는 이제 1시간마다 업데이트 하는 코드 로직을 짠다.
 #3. DB에서 Created_at_timestmap를 기준으로 3일 이내에 생성된 데이터들을 datas에 넣는다.
 
-conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', db='bobai3', charset='utf8mb4') 
+conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 
 sql = "select * from pair_info order by created_at_timestamp desc "
@@ -137,8 +137,13 @@ for data in datas:
             data['is_change'] = True
     except Exception as e:
         print(e)
-datas[0]
+
+conn.commit()
+conn.close()
+
 #5. 변화가 발생했고(True) & 스캠이 이미 발생하지 않은(false) 토큰들은 데이터를 다시 업데이트 한다.
+conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
+cursor = conn.cursor()
 sql = '''
 UPDATE ai_feature set mint_count = %s, swap_count = %s, burn_count = %s, active_period = %s,
 mint_mean_period = %s, swap_mean_period = %s, burn_mean_period=%s, swap_in = %s, swap_out = %s, lp_lock_ratio = %s
@@ -185,3 +190,6 @@ for data in datas:
             cursor.execute(sql,(mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,token_id))
         except Exception as e:
             print(e)       
+
+conn.commit()
+conn.close()
