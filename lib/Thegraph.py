@@ -32,6 +32,38 @@ query_pairs = '''
 }
 ''' 
 
+query_pairs = '''
+{
+ pairs(first: 1000, orderBy: createdAtBlockNumber, orderDirection: desc, where:{createdAtTimestamp_lt : %s}) {
+   id
+   token0{
+    id
+    symbol
+    name
+    txCount
+    totalLiquidity
+    decimals
+  }
+   token1{
+    id
+    symbol
+    name
+    txCount
+    totalLiquidity
+    decimals
+  }
+   reserve0
+   reserve1
+   totalSupply
+   reserveUSD
+   reserveETH
+   txCount
+   createdAtTimestamp
+   createdAtBlockNumber
+ }
+}
+''' 
+
 
 query_latest = '''
 {
@@ -61,6 +93,17 @@ query_latest = '''
    txCount
    createdAtTimestamp
    createdAtBlockNumber
+ }
+}
+''' 
+
+query_iter = '''
+{
+ pairs(first: 1000, orderBy: createdAtBlockNumber, orderDirection: asc, where: {createdAtTimestamp_gte:"%s"}) {
+   id
+   reserveETH
+   txCount
+   createdAtTimestamp
  }
 }
 ''' 

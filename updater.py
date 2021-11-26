@@ -1,33 +1,29 @@
 #기존에 DB에 있던 토큰 이후에 더 생성된 토큰들의 정보를 DB에 저장하는 코드
-
 import pymysql
 import pandas as pd
 from lib.Thegraph import *
 from lib.FeatureLib import *
 
-#지금은 DB가 없으니까 파일에서 읽는걸 DB에서 읽은거로 치자.
-# DB에서 읽어도 Datas에 다 담아서 호환성 유지할 것
 
-datas = pd.read_csv('./files/Pairs_v2.5.csv',encoding='utf-8-sig').to_dict('records')
-
-
-#기존 파일에 존재하는 가장 최신 토큰이후에 생긴 토큰들 불러오기
-last_timestamp = datas[0]['createdAtTimestamp']
-# DB가 있다면 아래와 같이 초기화 할 것
-# sql = "select CreatedAtTimestamp from pair_info order by createdAtTimestamp desc limit 0,1"
-# cursor.execute(sql)
-# result = cursor.fetchall()
-# last_timestamp = result[0][0]
+#1. 기존 파일에 존재하는 가장 최신 토큰이후에 생긴 토큰 DB에 추가
+conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', db='bobai3', charset='utf8mb4') 
+cursor = conn.cursor(pymysql.cursors.DictCursor)
+sql = "select * from pair_info order by created_at_timestamp desc limit 0,1"
+cursor.execute(sql)
+datas = cursor.fetchall()
+last_timestamp = datas[0]['created_at_timestamp']
 
 
 query = query_latest % str(last_timestamp)
 result = run_query(query)
 switch_token(result)
 datas = pd.json_normalize(result['data']['pairs']).to_dict('records')
-#datas = datas[0:10]
-#len(datas)
-datas[0]
-# 토큰의 메인 정보가 저장되는 DB(Pair_Info Table)에 해당 데이터 저장
+
+sql = '''
+INSERT INTO pair_info(id, token0_name,token1_name, token00_id, token00_name, token00_symbol, 
+token00_creator, token00_decimals, reserve_ETH, tx_count, created_at_timestamp, is_change, is_scam) 
+VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+'''
 for data in datas:
     try:
         id = data['id']
@@ -43,34 +39,33 @@ for data in datas:
         createdAtTimestamp = data['createdAtTimestamp']
         isChange = False
         isScam = False
-        data['error'] = ''
 
-        data['creator_address'] = token00_creator
-
-        # cursor.execute(sql,(id,token0_name,token1_name,token00_id,token00_name,token00_symbol,token00_creator,token00_decimals,reserveETH,txCount,createdAtTimestamp,isChange,isScam))
+        data['token00_creator'] = token00_creator
+        cursor.execute(sql,(id,token0_name,token1_name,token00_id,token00_name,token00_symbol,token00_creator,token00_decimals,reserveETH,txCount,createdAtTimestamp,isChange,isScam)) 
     except Exception as e:
-        data['error'] = e
         print(e)
-
-
+        
+conn.commit()
 
 datas[0]
-#AI에 들어갈 Feature들 구해오는 코드
-#Feature 구할때 오류나면 한 번 더 호출하자.
-error_list = []
-
+#2. 새로 추가된 토큰들에 대해서 Feature 구함
+conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', db='bobai3', charset='utf8mb4') 
+cursor = conn.cursor()
+sql = '''
+INSERT INTO ai_feature(token_id, pair_id, mint_count, swap_count, burn_count, active_period, 
+mint_mean_period, swap_mean_period, burn_mean_period, swap_in, swap_out, lp_lock_ratio, lp_avg, lp_std, 
+lp_creator_holding_ratio, burn_ratio, token_creator_holding_ratio ) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+'''
+data = datas[0]
 for data in datas:
     try:
+        token_id = data['token00.id']
+        pair_id = data['id']
         # Feature Part 1
         holders = get_holders(data['id'])
-        Lock_ratio = get_Lock_ratio(holders)
-        LP_avg, LP_stdev = calc_LP_distribution(holders)
-        LP_Creator_ratio = get_Creator_ratio(holders,data['creator_address'])
-        data['holders'] = holders
-        data['Lock_ratio'] = Lock_ratio
-        data['LP_avg'] = LP_avg
-        data['LP_stdev'] = LP_stdev
-        data['LP_Creator_ratio'] = LP_Creator_ratio
+        lp_lock_ratio = get_Lock_ratio(holders)
+        lp_avg, lp_std = calc_LP_distribution(holders)
+        lp_creator_holding_ratio = get_Creator_ratio(holders,data['token00_creator'])
         
         # Feature Part 2
         pair_address = data['id']
@@ -81,7 +76,7 @@ for data in datas:
         mint_count = len(mint_data_transaction)
         swap_count = len(swap_data_transaction)
         burn_count = len(burn_data_transaction)
-
+        
         initial_timestamp = int(mint_data_transaction[0]['timestamp'])
         last_timestamp = get_last_timestamp(mint_data_transaction,swap_data_transaction,burn_data_transaction)
         active_period = last_timestamp - initial_timestamp
@@ -89,30 +84,104 @@ for data in datas:
         swap_mean_period = int(get_swap_mean_period(swap_data_transaction,initial_timestamp))
         burn_mean_period = int(get_burn_mean_period(burn_data_transaction,initial_timestamp))
 
-        swapIn,swapOut = swap_IO_rate(swap_data_transaction,token_index(data))
-
-        data['mint_count'] = mint_count
-        data['swap_count'] = swap_count
-        data['burn_count'] = burn_count
+        swap_in,swap_out = swap_IO_rate(swap_data_transaction,token_index(data))
         
-        data['active_period'] = active_period
-        data['mint_mean_period'] = mint_mean_period
-        data['swap_mean_period'] = swap_mean_period
-        data['burn_mean_period'] = burn_mean_period
-
-        data['swapIn'] = swapIn
-        data['swapOut'] = swapOut
-
         # Feature part 3
         token_holders = get_holders(data['token00.id'])   
         burn_ratio = get_burn_ratio(token_holders)
-        creator_ratio = get_creator_ratio(token_holders,data['creator_address'])
-
-        data['token_holders'] = token_holders
-        data['burn_ratio'] = burn_ratio
-        data['creator_ratio'] = creator_ratio
-
+        token_creator_holding_ratio = get_creator_ratio(token_holders,data['token00_creator'])
+        
+        cursor.execute(sql,(token_id,pair_id,mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio))
     except Exception as e:
         print(e)
-        data['error'] = e
+        
 
+conn.close()
+## 여기까지가 그냥 새로운 애들 추가해서 넣는 거고, 아래부터는 이제 1시간마다 업데이트 하는 코드 로직을 짠다.
+#3. DB에서 Created_at_timestmap를 기준으로 3일 이내에 생성된 데이터들을 datas에 넣는다.
+
+conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', db='bobai3', charset='utf8mb4') 
+cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+sql = "select * from pair_info order by created_at_timestamp desc "
+cursor.execute(sql)
+datas = cursor.fetchall()
+
+timestamp = int(datas[0]['created_at_timestamp'])
+datas2 = []
+for data in datas:
+    if( timestamp - (int(data['created_at_timestamp'])) < 259200):
+        datas2.append(data)
+    else:
+        break
+datas = datas2
+
+#datas 에는 생긴지 3일 이내의 토큰들의 pair_info 테이블 정보가 들어있다.
+#먼저 기존과 비교해서 트랜잭션이 발생한 애들만 추가로 Feature를 뽑아야 하니까 Thegraph에서 tx를 가져와야 한다.
+#4. 기존 DB에 있는 데이터가 추가적인 트랜잭션이 발생했는지 검사 data['is_change']
+
+query = query_iter % datas[-1]['created_at_timestamp']
+result = run_query(query)
+pairs = result['data']['pairs']
+
+
+tx_list = {}
+for pair in pairs:
+    tx_list[pair['id']] = int(pair['txCount'])
+ 
+for data in datas:
+    try:
+        if(data['tx_count'] == tx_list[data['id']]):
+            data['is_change'] = False
+        else:
+            data['is_change'] = True
+    except Exception as e:
+        print(e)
+datas[0]
+#5. 변화가 발생했고(True) & 스캠이 이미 발생하지 않은(false) 토큰들은 데이터를 다시 업데이트 한다.
+sql = '''
+UPDATE ai_feature set mint_count = %s, swap_count = %s, burn_count = %s, active_period = %s,
+mint_mean_period = %s, swap_mean_period = %s, burn_mean_period=%s, swap_in = %s, swap_out = %s, lp_lock_ratio = %s
+, lp_avg = %s, lp_std = %s, lp_creator_holding_ratio = %s, burn_ratio = %s, token_creator_holding_ratio = %s where 
+token_id = %s
+'''
+data = datas[0]
+for data in datas:
+    if( (data['is_change'] == True )and (data['is_scam'] == False) ):
+        try:
+            data['token0.name'] = data['token0_name']
+            token_id = data['token00_id']
+            pair_id = data['id']
+            # Feature Part 1
+            holders = get_holders(data['id'])
+            lp_lock_ratio = get_Lock_ratio(holders)
+            lp_avg, lp_std = calc_LP_distribution(holders)
+            lp_creator_holding_ratio = get_Creator_ratio(holders,data['token00_creator'])
+            
+            # Feature Part 2
+            pair_address = data['id']
+            mint_data_transaction = call_theGraph_mint(pair_address)
+            swap_data_transaction = call_theGraph_swap(pair_address)
+            burn_data_transaction = call_theGraph_burn(pair_address)
+
+            mint_count = len(mint_data_transaction)
+            swap_count = len(swap_data_transaction)
+            burn_count = len(burn_data_transaction)
+
+            initial_timestamp = int(mint_data_transaction[0]['timestamp'])
+            last_timestamp = get_last_timestamp(mint_data_transaction,swap_data_transaction,burn_data_transaction)
+            active_period = last_timestamp - initial_timestamp
+            mint_mean_period = int(get_mint_mean_period(mint_data_transaction,initial_timestamp))
+            swap_mean_period = int(get_swap_mean_period(swap_data_transaction,initial_timestamp))
+            burn_mean_period = int(get_burn_mean_period(burn_data_transaction,initial_timestamp))
+
+            swap_in,swap_out = swap_IO_rate(swap_data_transaction,token_index(data))
+
+            # Feature part 3
+            token_holders = get_holders(data['token00_id'])   
+            burn_ratio = get_burn_ratio(token_holders)
+            token_creator_holding_ratio = get_creator_ratio(token_holders,data['token00_creator'])
+
+            cursor.execute(sql,(mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,token_id))
+        except Exception as e:
+            print(e)       
