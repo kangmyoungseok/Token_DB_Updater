@@ -10,15 +10,15 @@ error_list = []
 for data in tqdm(datas,desc="processing rate"):
     try:
         # Feature Part 1
-#        holders = get_holders(data['id'])
-#        Lock_ratio = get_Lock_ratio(holders)
-#        LP_avg, LP_stdev = calc_LP_distribution(holders)
-#        LP_Creator_ratio = get_Creator_ratio(holders,data['creator_address'])
-#        data['holders'] = holders
-#        data['Lock_ratio'] = Lock_ratio
-#        data['LP_avg'] = LP_avg
-#        data['LP_stdev'] = LP_stdev
-#        data['LP_Creator_ratio'] = LP_Creator_ratio
+        holders = get_holders(data['id'])
+        Lock_ratio = get_Lock_ratio(holders)
+        LP_avg, LP_stdev = calc_LP_distribution(holders)
+        LP_Creator_ratio = get_Creator_ratio(holders,data['creator_address'])
+        data['holders'] = holders
+        data['Lock_ratio'] = Lock_ratio
+        data['LP_avg'] = LP_avg
+        data['LP_stdev'] = LP_stdev
+        data['LP_Creator_ratio'] = LP_Creator_ratio
         
         # Feature Part 2
         pair_address = data['id']
