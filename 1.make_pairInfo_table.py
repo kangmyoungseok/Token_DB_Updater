@@ -1,7 +1,7 @@
 import pymysql 
 import pandas as pd
 
-conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', charset='utf8mb4') 
+conn = pymysql.connect(host='localhost', user='root', password='bobai123', charset='utf8mb4') 
 
 cursor = conn.cursor() 
 
@@ -13,7 +13,7 @@ conn.commit()
 conn.close() 
 
 
-conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', db='bobai3', charset='utf8mb4') 
+conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor()
 
 
@@ -38,7 +38,7 @@ cursor.execute(sql)
 
 
 #API로 데이터 불러오고
-datas = pd.read_csv('./files/Pairs_v2.7.csv',encoding='utf-8-sig').to_dict('records')
+datas = pd.read_csv('./files/Pairs_v2.8.csv',encoding='utf-8-sig').to_dict('records')
 
 sql = '''
 INSERT INTO pair_info(id, token0_name,token1_name, token00_id, token00_name, token00_symbol, token00_creator, token00_decimals, reserve_ETH, tx_count, created_at_timestamp, is_change, is_scam) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
@@ -70,7 +70,7 @@ conn.close()
 #### Feature 테이블 ###########################
 
 try:
-    conn = pymysql.connect(host='localhost',user='root',password='rkdaudtjr1!',db = 'bobai3',charset='utf8mb4')
+    conn = pymysql.connect(host='localhost',user='root',password='bobai123',db = 'bobai3',charset='utf8mb4')
     cursor = conn.cursor()
 
     #1. table 만들기
@@ -140,7 +140,7 @@ conn.close()
 ################################################
 #### SCAM DB 테이블 ################
 
-conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', db='bobai3', charset='utf8mb4') 
+conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor()
 
 
@@ -166,21 +166,14 @@ INSERT INTO scam_token(token_id,pair_id,tx_id,rugpull_timestamp,before_ETH,after
 
 for data in datas:
     try:
-        id = data['id']
-        token0_name = data['token0.name']
-        token1_name = data['token1.name']
-        token00_id = data['token00.id']
-        token00_name = data['token00.name']
-        token00_symbol = data['token00.symbol']
-        token00_creator = data['creator_address']
-        token00_decimals = data['token00.decimals']
-        reserveETH = data['reserveETH']
-        txCount = data['txCount']
-        createdAtTimestamp = data['createdAtTimestamp']
-        isChange = False
-        isScam = data['is_scam']
+        token_id = data['token_id']
+        pair_id = data['pair_id']
+        tx_id = data['tx_id']
+        rugpull_timestamp = data['rugpull_timestamp']
+        before_ETH = data['beforeETH']
+        after_ETH = data['afterETH']
 
-        cursor.execute(sql,(id,token0_name,token1_name,token00_id,token00_name,token00_symbol,token00_creator,token00_decimals,reserveETH,txCount,createdAtTimestamp,isChange,isScam)) 
+        cursor.execute(sql,(token_id,pair_id,tx_id,rugpull_timestamp,before_ETH,after_ETH)) 
     except Exception as e:
         print(e)
         
