@@ -163,7 +163,11 @@ datas = pd.read_csv('./files/Scam_v1.0.csv',encoding='utf-8-sig').to_dict('recor
 sql = '''
 INSERT INTO scam_token(token_id,pair_id,tx_id,rugpull_timestamp,before_ETH,after_ETH) VALUES(%s,%s,%s,%s,%s,%s)
 '''
+sql2 = '''
+UPDATE pair_info set is_scam=true where token00_id = %s
+'''
 
+data = datas[1]
 for data in datas:
     try:
         token_id = data['token_id']
@@ -172,7 +176,7 @@ for data in datas:
         rugpull_timestamp = data['rugpull_timestamp']
         before_ETH = data['beforeETH']
         after_ETH = data['afterETH']
-
+        cursor.execute(sql2,token_id)
         cursor.execute(sql,(token_id,pair_id,tx_id,rugpull_timestamp,before_ETH,after_ETH)) 
     except Exception as e:
         print(e)
