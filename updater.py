@@ -49,13 +49,15 @@ conn.commit()
 
 
 #2. 새로 추가된 토큰들에 대해서 Feature 구함
-conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
+conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor()
 sql = '''
 INSERT INTO ai_feature(token_id, pair_id, mint_count, swap_count, burn_count, active_period, 
 mint_mean_period, swap_mean_period, burn_mean_period, swap_in, swap_out, lp_lock_ratio, lp_avg, lp_std, 
-lp_creator_holding_ratio, burn_ratio, token_creator_holding_ratio ) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+lp_creator_holding_ratio, burn_ratio, token_creator_holding_ratio, created_at_timestamp, number_of_token_creation_of_creator ) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 '''
+sql2 = ''' select count(*) from pair_info where token00_creator = %s'''
+
 
 for data in datas:
     try:
@@ -91,7 +93,11 @@ for data in datas:
         burn_ratio = get_burn_ratio(token_holders)
         token_creator_holding_ratio = get_creator_ratio(token_holders,data['token00_creator'])
         
-        cursor.execute(sql,(token_id,pair_id,mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio))
+        created_at_timestamp = data['createdAtTimestamp']
+        cursor.execute(sql2,data['token00_creator'])
+        number_of_token_creation_of_creator = cursor.fetchone()[0] + 1
+               
+        cursor.execute(sql,(token_id,pair_id,mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,created_at_timestamp,number_of_token_creation_of_creator))
     except Exception as e:
         print(e)
         
