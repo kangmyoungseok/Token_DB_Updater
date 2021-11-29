@@ -67,7 +67,7 @@ query_pairs = '''
 
 query_latest = '''
 {
- pairs(first: 1000, orderBy: createdAtBlockNumber, orderDirection: desc, where: {createdAtTimestamp_gt:%s}) {
+ pairs(first: 1000, orderBy: createdAtBlockNumber, orderDirection: asc, where: {createdAtTimestamp_gt:%s}) {
    id
    token0{
     id
