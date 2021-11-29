@@ -6,6 +6,7 @@ from lib.FeatureLib import *
 from lib.Thegraph import *
 import pymysql 
 from decimal import Decimal
+from tqdm import tqdm
 current_time = int(time())
 
 query_scam_iter = '''
@@ -94,7 +95,7 @@ UPDATE pair_info set is_scam=true where token00_id = %s
 '''
 
 
-for data in datas:
+for data in tqdm(datas,desc="processing") :
   if(data['is_scam'] == 1):
     continue
   try:
