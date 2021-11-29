@@ -1,6 +1,6 @@
 import pymysql 
 
-conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', db='bobai3', charset='utf8mb4') 
+conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 sql = "select * from pair_info order by created_at_timestamp"
 cursor.execute(sql)
