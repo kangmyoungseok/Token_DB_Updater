@@ -1,5 +1,6 @@
 import pymysql 
 import pandas as pd
+from tqdm import tqdm
 
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', charset='utf8mb4') 
 
@@ -20,16 +21,16 @@ cursor = conn.cursor()
 ## 테이블 만들기
 sql = '''CREATE TABLE pair_info (
     id char(50) NOT NULL PRIMARY KEY,
-    token0_name varchar(250),
-    token1_name varchar(250),
+    token0_name varchar(250) NOT NULL,
+    token1_name varchar(250) NOT NULL,
     token00_id char(50) NOT NULL,
-    token00_name varchar(250),
-    token00_symbol varchar(250),
-    token00_creator char(50),
-    token00_decimals int,
-    reserve_ETH float,
-    tx_count int,
-    created_at_timestamp char(15),
+    token00_name varchar(250) NOT NULL,
+    token00_symbol varchar(250) NOT NULL,
+    token00_creator char(50) NOT NULL,
+    token00_decimals int NOT NULL,
+    reserve_ETH float NOT NULL,
+    tx_count int NOT NULL,
+    created_at_timestamp int(15) NOT NULL,
     is_change Bool,
     is_scam Bool
 ) CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -43,7 +44,7 @@ datas = pd.read_csv('./files/Pairs_v2.8.csv',encoding='utf-8-sig').to_dict('reco
 sql = '''
 INSERT INTO pair_info(id, token0_name,token1_name, token00_id, token00_name, token00_symbol, token00_creator, token00_decimals, reserve_ETH, tx_count, created_at_timestamp, is_change, is_scam) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 '''
-for data in datas:
+for data in tqdm(datas,desc="Insert to pair_info"):
     try:
         id = data['id']
         token0_name = data['token0.name']
@@ -109,7 +110,7 @@ INSERT INTO ai_feature(token_id, pair_id, mint_count, swap_count, burn_count, ac
 mint_mean_period, swap_mean_period, burn_mean_period, swap_in, swap_out, lp_lock_ratio, lp_avg, lp_std, 
 lp_creator_holding_ratio, burn_ratio, token_creator_holding_ratio ) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 '''
-for data in datas:
+for data in tqdm(datas,desc="Insert to ai_feature"):
     try:
         token_id = data['token00.id']
         pair_id = data['id']
@@ -167,8 +168,7 @@ sql2 = '''
 UPDATE pair_info set is_scam=true where token00_id = %s
 '''
 
-data = datas[1]
-for data in datas:
+for data in tqdm(datas,desc="Insert to Scam DB"):
     try:
         token_id = data['token_id']
         pair_id = data['pair_id']
