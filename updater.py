@@ -13,17 +13,40 @@ cursor.execute(sql)
 datas = cursor.fetchall()
 last_timestamp = datas[0]['created_at_timestamp']
 
-
 query = query_latest % str(last_timestamp)
 result = run_query(query)
 switch_token(result)
 datas = pd.json_normalize(result['data']['pairs']).to_dict('records')
+
+if(len(datas) == 1000):
+    last_timestamp = datas[-1]['createdAtTimestamp']
+    query = query_latest % str(last_timestamp)
+    result = run_query(query)
+    switch_token(result)
+    datas2 = pd.json_normalize(result['data']['pairs']).to_dict('records')
+    datas.extend(datas2)
+    if(len(datas2) == 1000 ):
+        last_timestamp = datas2[-1]['createdAtTimestamp']
+        query = query_latest % str(last_timestamp)
+        result = run_query(query)
+        switch_token(result)
+        datas3 = pd.json_normalize(result['data']['pairs']).to_dict('records')
+        datas.extend(datas3)
+
+
+
+
+
+
+
 
 sql = '''
 INSERT INTO pair_info(id, token0_name,token1_name, token00_id, token00_name, token00_symbol, 
 token00_creator, token00_decimals, reserve_ETH, tx_count, created_at_timestamp, is_change, is_scam) 
 VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 '''
+
+
 for data in datas:
     try:
         id = data['id']
@@ -46,10 +69,10 @@ for data in datas:
         print(e)
         
 conn.commit()
-
+conn.close()
 
 #2. 새로 추가된 토큰들에 대해서 Feature 구함
-conn = pymysql.connect(host='localhost', user='root', password='rkdaudtjr1!', db='bobai3', charset='utf8mb4') 
+conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor()
 sql = '''
 INSERT INTO ai_feature(token_id, pair_id, mint_count, swap_count, burn_count, active_period, 
@@ -101,7 +124,7 @@ for data in datas:
     except Exception as e:
         print(e)
         
-
+conn.commit()
 conn.close()
 ## 여기까지가 그냥 새로운 애들 추가해서 넣는 거고, 아래부터는 이제 1시간마다 업데이트 하는 코드 로직을 짠다.
 #3. DB에서 Created_at_timestmap를 기준으로 3일 이내에 생성된 데이터들을 datas에 넣는다.
