@@ -31,7 +31,6 @@ def is_rugpull_occur(data):
     burn_data_transaction = call_theGraph_burn(pair_address)
     
     rugpull_timestamp, rugpull_change, is_rugpull, before_rugpull_Eth, after_rugpull_Eth,rugpull_method,tx_id = get_rugpull_timestamp(mint_data_transaction,swap_data_transaction,burn_data_transaction,token_index(data))
-    get_rugpull_timestamp(mint_data_transaction,swap_data_transaction,burn_data_transaction,token_index(data))
 
     if(is_rugpull == True):
         data['token_id'] = token_id
@@ -46,7 +45,7 @@ def is_rugpull_occur(data):
     data['is_scam'] = False
     print(e)
   
-  return data
+  #return data
   
     
 
