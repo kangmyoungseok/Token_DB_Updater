@@ -95,7 +95,7 @@ UPDATE pair_info set is_scam=true where token00_id = %s
 
 
 for data in tqdm(datas,desc="processing") :
-  if(data['is_scam'] == 1):
+  if( (data['is_scam'] == 1) or (data['tx_count'] < 3)  )  :
     continue
   try:
     before_ETH = Decimal(data['reserve_ETH'])
