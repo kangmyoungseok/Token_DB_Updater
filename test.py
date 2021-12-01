@@ -13,3 +13,6 @@ for data in tqdm(datas,desc="prcessing"):
     number = cursor.fetchall()[0]['count(*)']
     sql2 = "update ai_feature set number_of_token_creation_of_creator = %s where token_id = %s"
     cursor.execute(sql2,(number,data['token00_id']))
+
+conn.commit()
+conn.close()
