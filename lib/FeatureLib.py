@@ -68,7 +68,7 @@ def get_creatorAddress(pair_id,token_id):
     
     try:
         creator_address = repos['contractInfo']['creatorAddress']
-        print('find by ethplorer :' + token_id)
+        #print('find by ethplorer :' + token_id)
     except:     #오류가 나면 이더스캔에서 크롤링
          url = 'https://etherscan.io/address/'+token_id
          try:
@@ -404,3 +404,29 @@ def get_rugpull_timestamp(mint_data_transaction,swap_data_transaction,burn_data_
         print(e)
         print('Critical Error Occur')
         return '1',0,False,1,1,'Error',-1
+
+
+def is_rugpull_occur(data):
+  try:
+    pair_address = data['id']
+    token_id = data['token00_id']
+    data['token0.name'] = data['token0_name']
+    mint_data_transaction = call_theGraph_mint(pair_address)
+    swap_data_transaction = call_theGraph_swap(pair_address)
+    burn_data_transaction = call_theGraph_burn(pair_address)
+    
+    rugpull_timestamp, rugpull_change, is_rugpull, before_rugpull_Eth, after_rugpull_Eth,rugpull_method,tx_id = get_rugpull_timestamp(mint_data_transaction,swap_data_transaction,burn_data_transaction,token_index(data))
+
+    if(is_rugpull == True):
+        data['token_id'] = token_id
+        data['tx_id'] = tx_id
+        data['rugpull_timestamp'] = rugpull_timestamp
+        data['before_ETH'] = before_rugpull_Eth
+        data['after_ETH'] = after_rugpull_Eth
+        data['is_scam'] = True
+    else:
+        data['is_scam'] = False
+  except Exception as e:
+    data['is_scam'] = False
+    print(e)
+  

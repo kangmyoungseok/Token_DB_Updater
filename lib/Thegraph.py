@@ -108,6 +108,18 @@ query_iter = '''
 }
 ''' 
 
+query_scam_iter = '''
+{
+ pairs(first: 1000, orderBy: createdAtBlockNumber, orderDirection: desc, where: {createdAtTimestamp_lt:%s}) {
+   id
+   reserveETH
+   txCount
+   createdAtTimestamp
+   createdAtBlockNumber
+ }
+}
+''' 
+
 mint_query_first = '''
 {
   mints(first: 1, orderBy: timestamp, orderDirection: asc, where:{ pair: "%s" }) {
