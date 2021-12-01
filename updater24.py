@@ -6,6 +6,7 @@ from lib.FeatureLib import *
 from decimal import Decimal
 import time
 from tqdm import tqdm
+import datetime
 
 #1. 기존 파일에 존재하는 가장 최신 토큰이후에 생긴 토큰 DB에 추가
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
@@ -300,3 +301,54 @@ for data in tqdm(datas,desc="update token feature: "):
 
 conn.commit()
 conn.close()
+
+
+#6. Feature들의 업데이트 이후, 업데이트된 Feature들로 AI 모델에 넣어야 한다.
+# 스캠이 발생한 토큰[is_scam == true]은 ai 모델에 넣지 않는다.
+# datas에 있는 토큰들에 대해서 진행
+conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='bobai3',charset='utf8mb4')
+cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+sql = "select * from ai_feature join pair_info on ai_feature.pair_id = pair_info.id where pair_info.created_at_timestamp > %d " %timestamp
+cursor.execute(sql)
+datas = cursor.fetchall()
+
+result = []
+for data in datas:
+    if(data['is_scam'] == 1):
+        continue
+    dataset = {}
+    try:
+        dataset['id'] = data['pair_id'] 
+        dataset['mint_count_per_week'] = data['mint_count'] / ((int(data['active_period']) / (60* 60 * 24 * 7)) + 1)
+        dataset['burn_count_per_week'] =data['burn_count'] / ((int(data['active_period']) / (60* 60 * 24 * 7)) + 1)
+        tx_count = data['mint_count'] + data['burn_count'] + data['swap_count']
+        dataset['mint_ratio'] = data['mint_count'] / tx_count
+        dataset['swap_ratio'] = data['swap_count'] / tx_count
+        dataset['burn_ratio'] = data['burn_count'] / tx_count
+        dataset['mint_mean_period'] = data['mint_mean_period'] / data['active_period']
+        dataset['swap_mean_period'] = data['swap_mean_period'] / data['active_period']
+        dataset['burn_mean_period'] = data['burn_mean_period'] / data['active_period']
+        dataset['swap_in_per_week'] = data['swap_in'] /((int(data['active_period']) / (60* 60 * 24 * 7)) + 1)
+        dataset['swap_out_per_week'] = data['swap_out'] / ((int(data['active_period']) / (60* 60 * 24 * 7)) + 1)
+        dataset['swap_rate'] = data['swap_in'] / (data['swap_out'] + 1)
+        dataset['lp_avg'] = data['lp_avg'] 
+        dataset['lp_std'] = data['lp_std']
+        dataset['lp_creator_holding_ratio'] = data['lp_creator_holding_ratio']
+        dataset['lp_lock_ratio'] = data['lp_lock_ratio']
+        dataset['token_burn_ratio'] = data['burn_ratio']
+        dataset['token_creator_holding_ratio'] = data['token_creator_holding_ratio']
+        dataset['number_of_token_creation_of_creator'] = data['number_of_token_creation_of_creator']
+    except Exception as e:
+        print(e)
+        print([tx_count,data['swap_count'],data['active_period']])
+        continue
+    result.append(dataset)
+
+filename = '/home/ec2-user/Token_DB_Updater/ai_feature/Dataset[24]_'+datetime.datetime.now().strftime('%m.%d_%H')+'.csv'
+pd.DataFrame(result).to_csv(filename,encoding='utf-8-sig',index=False)
+
+# 7. 결과로 나온 Dataset을 통해서 AI 모델의 점수 계산
+
+
+# 8. AI 모델 점수 낸거 추가.

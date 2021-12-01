@@ -335,6 +335,11 @@ for data in datas:
         continue
     result.append(dataset)
 
-filename = './ai_feature/Dataset_'+datetime.datetime.now().strftime('%m.%d_%H')+'.csv'
+filename = '/home/ec2-user/Token_DB_Updater/ai_feature/Dataset_'+datetime.datetime.now().strftime('%m.%d_%H')+'.csv'
 pd.DataFrame(result).to_csv(filename,encoding='utf-8-sig',index=False)
-    
+
+result[2]
+# 7. 결과로 나온 Dataset을 통해서 AI 모델의 점수 계산
+
+
+# 8. AI 모델 점수 낸거 추가.
