@@ -341,8 +341,6 @@ for data in datas:
         continue
     result.append(dataset)
 
-filename = '/home/ec2-user/Token_DB_Updater/ai_feature/Dataset_'+datetime.datetime.now().strftime('%m.%d_%H')+'.csv'
-pd.DataFrame(result).to_csv(filename,encoding='utf-8-sig',index=False)
 
 
 # 7. 결과로 나온 Dataset을 통해서 AI 모델의 점수 계산
@@ -354,7 +352,7 @@ dataset = dataset.dropna(how='any',axis = 0)
 scaler = MinMaxScaler()
 dataset[ : ] = scaler.fit_transform(dataset[ : ])
 
-model = keras.models.load_model('./ann96.h5')
+model = keras.models.load_model('/home/ec2-user/Token_DB_Updater/ann96.h5')
 model.summary()
 
 result = model.predict(dataset)
@@ -364,6 +362,10 @@ origin['predict'] = result
 datas = origin.to_dict('records')
 for data in datas:
     data['predict'] = int(data['predict'] * 100)
+
+filename = '/home/ec2-user/Token_DB_Updater/ai_feature/Dataset_'+datetime.datetime.now().strftime('%m.%d_%H')+'.csv'
+pd.DataFrame(datas).to_csv(filename,encoding='utf-8-sig',index=False)
+
 
 # 8. AI 모델 점수 낸거 추가.
 conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='bobai3',charset='utf8mb4')

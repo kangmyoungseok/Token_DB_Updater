@@ -7,6 +7,10 @@ from decimal import Decimal
 import time
 from tqdm import tqdm
 import datetime
+from tensorflow import keras
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 #1. 기존 파일에 존재하는 가장 최신 토큰이후에 생긴 토큰 DB에 추가
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
@@ -35,11 +39,6 @@ if(len(datas) == 1000):
         switch_token(result)
         datas3 = pd.json_normalize(result['data']['pairs']).to_dict('records')
         datas.extend(datas3)
-
-
-
-
-
 
 
 
@@ -141,7 +140,7 @@ while(1):
     result = run_query(query) 
     pairs.extend(result['data']['pairs'])
     limit_time = int(result['data']['pairs'][999]['createdAtTimestamp'])
-    if( (current_time - limit_time) > 5184000):
+    if( (current_time - limit_time) > 7776000):
       break
 
 
@@ -212,7 +211,7 @@ datas = cursor.fetchall()
 
 cursor.close()
 
-#datas 에는 생긴지 3일 이내의 토큰들의 pair_info 테이블 정보가 들어있다.
+#datas 에는 생긴지 90일 이내의 토큰들의 pair_info 테이블 정보가 들어있다.
 #먼저 기존과 비교해서 트랜잭션이 발생한 애들만 추가로 Feature를 뽑아야 하니까 Thegraph에서 tx를 가져와야 한다.
 #5. 기존 DB에 있는 데이터가 추가적인 트랜잭션이 발생했는지 검사 data['is_change']
 
@@ -230,7 +229,7 @@ while(1):
     result = run_query(query) 
     pairs.extend(result['data']['pairs'])
     limit_time = int(result['data']['pairs'][999]['createdAtTimestamp'])
-    if( (current_time - limit_time) > 5184000):
+    if( (current_time - limit_time) > 7776000):
       break
 
 
@@ -324,6 +323,8 @@ for data in datas:
         continue
     dataset = {}
     try:
+        dataset['token_id'] = data['token_id']
+        dataset['reserve_ETH'] = data['reserve_ETH']
         dataset['id'] = data['pair_id'] 
         dataset['mint_count_per_week'] = data['mint_count'] / ((int(data['active_period']) / (60* 60 * 24 * 7)) + 1)
         dataset['burn_count_per_week'] =data['burn_count'] / ((int(data['active_period']) / (60* 60 * 24 * 7)) + 1)
@@ -350,10 +351,60 @@ for data in datas:
         continue
     result.append(dataset)
 
-filename = '/home/ec2-user/Token_DB_Updater/ai_feature/Dataset[24]_'+datetime.datetime.now().strftime('%m.%d_%H')+'.csv'
-pd.DataFrame(result).to_csv(filename,encoding='utf-8-sig',index=False)
+
 
 # 7. 결과로 나온 Dataset을 통해서 AI 모델의 점수 계산
+# 7. 결과로 나온 Dataset을 통해서 AI 모델의 점수 계산
+dataset = pd.DataFrame(result)
+origin = dataset
+dataset = dataset.drop(columns = ['id', 'lp_avg','reserve_ETH','token_id'])
+dataset = dataset.dropna(how='any',axis = 0)
 
+scaler = MinMaxScaler()
+dataset[ : ] = scaler.fit_transform(dataset[ : ])
+
+model = keras.models.load_model('/home/ec2-user/Token_DB_Updater/ann96.h5')
+model.summary()
+
+result = model.predict(dataset)
+origin['predict'] = result
+
+
+
+datas = origin.to_dict('records')
+for data in datas:
+    data['predict'] = int(data['predict'] * 100)
+
+filename = '/home/ec2-user/Token_DB_Updater/ai_feature/Dataset[24]_'+datetime.datetime.now().strftime('%m.%d_%H')+'.csv'
+pd.DataFrame(datas).to_csv(filename,encoding='utf-8-sig',index=False)
 
 # 8. AI 모델 점수 낸거 추가.
+conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='bobai3',charset='utf8mb4')
+cursor = conn.cursor(pymysql.cursors.DictCursor)
+sql = "select idx from graph_table where pair_id = %s"
+sql2 = "UPDATE graph_table set idx = {}, {} = {}, {} = {} where pair_id = '{}'" 
+sql3 = "insert into graph_table (token_id,pair_id,idx,is_latest,ai0,eth0) values (%s,%s,0,0,%s,%s)"
+
+for data in tqdm(datas,desc="input graph_table"):    
+    try:
+        cursor.execute(sql,data['id'])
+        result = cursor.fetchone()
+        idx = result['idx'] + 1
+        
+        #idx가 존재하면 기존에 있던 데이터에서 업데이트 수행
+        ai_idx = 'ai{}'.format(idx)
+        eth_idx = 'eth{}'.format(idx)
+        ai_score = data['predict']
+        eth_amount = data['reserve_ETH']
+        sql4 = sql2.format(idx,ai_idx,ai_score,eth_idx,eth_amount,data['id'])
+        cursor.execute(sql4)
+    except:
+        #idx가 존재하지 않으면, 새로운 행 추가
+        token_id = data['token_id']
+        pair_id = data['id']
+        ai0 = data['predict']
+        eth0 = data['reserve_ETH']
+        cursor.execute(sql3,(token_id, pair_id, ai0, eth0))
+
+conn.commit()
+
