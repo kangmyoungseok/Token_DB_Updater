@@ -177,9 +177,10 @@ for data in tqdm(datas,desc="rugpull check: ") :
     current_ETH = Decimal(sus_list[data['id']])
     
     if( (current_ETH / before_ETH) < 0.01 ): # 이 조건을 만족한다면, 러그풀이 발생했을 거라 판단하고, 러그풀 발생지점을 찾는 코드를 돌린다.
-      #print("러그풀 발생 before : %d , after : %d",before_ETH,current_ETH)
+      
       is_rugpull_occur(data)
       if(data['is_scam'] == True):  #DB에 데이터 넣기
+        print("러그풀 발생 before : %d , after : %d",before_ETH,current_ETH)
         token_id = data['token_id']
         pair_id = data['id']
         tx_id = data['tx_id']
