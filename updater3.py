@@ -368,11 +368,11 @@ for data in datas:
 # 8. AI 모델 점수 낸거 추가.
 conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='bobai3',charset='utf8mb4')
 cursor = conn.cursor(pymysql.cursors.DictCursor)
-sql = "select idx from graph where pair_id = %s"
-sql2 = "UPDATE graph set idx = {}, {} = {}, {} = {} where pair_id = '{}'" 
-sql3 = "insert into graph (token_id,pair_id,idx,is_latest,ai0,eth0) values (%s,%s,0,0,%s,%s)"
+sql = "select idx from graph_table where pair_id = %s"
+sql2 = "UPDATE graph_table set idx = {}, {} = {}, {} = {} where pair_id = '{}'" 
+sql3 = "insert into graph_table (token_id,pair_id,idx,is_latest,ai0,eth0) values (%s,%s,0,0,%s,%s)"
 
-for data in tqdm(datas,desc="input graph"):    
+for data in tqdm(datas,desc="input graph_table"):    
     try:
         cursor.execute(sql,data['id'])
         result = cursor.fetchone()
