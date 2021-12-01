@@ -212,9 +212,6 @@ datas = cursor.fetchall()
 
 cursor.close()
 
-
-
-
 #datas 에는 생긴지 3일 이내의 토큰들의 pair_info 테이블 정보가 들어있다.
 #먼저 기존과 비교해서 트랜잭션이 발생한 애들만 추가로 Feature를 뽑아야 하니까 Thegraph에서 tx를 가져와야 한다.
 #5. 기존 DB에 있는 데이터가 추가적인 트랜잭션이 발생했는지 검사 data['is_change']
@@ -225,9 +222,17 @@ sql = '''
 UPDATE pair_info set tx_count = %s,reserve_ETH = %s where id=%s
 '''
 
-query = query_iter % datas[-1]['created_at_timestamp']
-result = run_query(query)
-pairs = result['data']['pairs']
+current_time = int(time.time())
+limit_time = current_time
+pairs = []
+while(1):
+    query = query_scam_iter % limit_time
+    result = run_query(query) 
+    pairs.extend(result['data']['pairs'])
+    limit_time = int(result['data']['pairs'][999]['createdAtTimestamp'])
+    if( (current_time - limit_time) > 5184000):
+      break
+
 
 
 tx_list = {}
