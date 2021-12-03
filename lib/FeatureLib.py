@@ -76,7 +76,10 @@ def get_creatorAddress(pair_id,token_id):
              page_soup = BeautifulSoup(response.text, "html.parser")
              Transfers_info_table_1 = str(page_soup.find("a", {"class": "hash-tag text-truncate"}))
              creator_address = re.sub('<.+?>', '', Transfers_info_table_1, 0).strip()
-             print('find by etherscan :' + token_id)
+             if(creator_address == 'None'):
+                query = mint_query_first % pair_id
+                response = run_query(query)
+                creator_address = response['data']['mints'][0]['to']
          except Exception as e:  #이더스캔 크롤링까지 에러나면 'Error'로 표시
               print(e)
               creator_address = 'Fail to get Creator Address'
