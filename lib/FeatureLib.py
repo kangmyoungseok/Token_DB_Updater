@@ -119,8 +119,7 @@ def calc_LP_distribution(holders):
 def get_Lock_ratio(holders):
     for holder in holders:
         if(holder['address'] in Locker_address):
-          print(holder['share'])
-    
+          return holder['share']
     
 def get_Creator_ratio(holders,creator_address):
     for holder in holders:
