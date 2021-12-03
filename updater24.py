@@ -381,21 +381,21 @@ pd.DataFrame(datas).to_csv(filename,encoding='utf-8-sig',index=False)
 conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='bobai3',charset='utf8mb4')
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 sql = "select idx from graph_table where pair_id = %s"
-sql2 = "UPDATE graph_table set idx = {}, {} = {}, {} = {} where pair_id = '{}'" 
-sql3 = "insert into graph_table (token_id,pair_id,idx,is_latest,ai0,eth0) values (%s,%s,0,1,%s,%s)"
+sql2 = "UPDATE graph_table set idx = {}, {} = {}, {} = {}, current_score = {} where pair_id = '{}'" 
+sql3 = "insert into graph_table (token_id,pair_id,idx,is_latest,ai0,eth0,current_score) values (%s,%s,0,1,%s,%s,%s)"
 
 for data in tqdm(datas,desc="input graph_table"):    
     try:
         cursor.execute(sql,data['id'])
         result = cursor.fetchone()
         idx = result['idx'] + 1
-        
         #idx가 존재하면 기존에 있던 데이터에서 업데이트 수행
         ai_idx = 'ai{}'.format(idx)
         eth_idx = 'eth{}'.format(idx)
         ai_score = data['predict']
         eth_amount = data['reserve_ETH']
-        sql4 = sql2.format(idx,ai_idx,ai_score,eth_idx,eth_amount,data['id'])
+        current_score = ai_score
+        sql4 = sql2.format(idx,ai_idx,ai_score,eth_idx,eth_amount,current_score,data['id'])
         cursor.execute(sql4)
     except:
         #idx가 존재하지 않으면, 새로운 행 추가
@@ -403,7 +403,7 @@ for data in tqdm(datas,desc="input graph_table"):
         pair_id = data['id']
         ai0 = data['predict']
         eth0 = data['reserve_ETH']
-        cursor.execute(sql3,(token_id, pair_id, ai0, eth0))
+        cursor.execute(sql3,(token_id, pair_id, ai0, eth0,ai0))
 
 conn.commit()
 conn.close()
