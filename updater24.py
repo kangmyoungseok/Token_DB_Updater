@@ -424,11 +424,10 @@ for data in datas:
     idx = data['idx']
     idx = int(idx/8)
     if(idx == 2):
-        data['ai']
-        sql4 = sql2.format(data['ai0'],data['ai1'],data['ai2'],data['eth0'],data['eth1'],data['eth2'],data['id'] )
+        sql4 = sql2.format(data['ai0'],data['ai8'],data['ai16'],data['eth0'],data['eth8'],data['eth16'],data['id'] )
         cursor.execute(sql4)
     if(idx == 1):
-        sql4 = sql1.format(data['ai0'],data['ai1'],data['eth0'],data['eth1'],data['id'] )
+        sql4 = sql1.format(data['ai0'],data['ai8'],data['eth0'],data['eth8'],data['id'] )
         cursor.execute(sql4)
     if(idx == 0):
         sql4 = sql0.format(data['ai0'],data['eth0'],data['id'] )   
