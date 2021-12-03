@@ -120,8 +120,6 @@ def get_Lock_ratio(holders):
     for holder in holders:
         if(holder['address'] in Locker_address):
           print(holder['share'])
-        else:
-          print('1')
     
     
 def get_Creator_ratio(holders,creator_address):
