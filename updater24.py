@@ -413,24 +413,57 @@ conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='boba
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 timestamp = int(time.time()) - 259200
 sql = "select * from pair_info join graph_table on pair_info.id = graph_table.pair_id where pair_info.created_at_timestamp < %s and is_scam = 0 and graph_table.is_latest = 1"
-sql2 = "UPDATE graph_table set is_latest =0, idx = 2, ai0 = {}, ai1 = {}, ai2 = {},eth0 = {}, eth1 = {}, eth2 = {} where pair_id = '{}'" 
-sql1 = "UPDATE graph_table set is_latest =0, idx = 1, ai0 = {}, ai1 = {}, eth0 = {}, eth1 = {} where pair_id = '{}'" 
-sql0 = "UPDATE graph_table set is_latest =0, idx = 0, ai0 = {}, eth0 = {} where pair_id = '{}'" 
+sql9 = "delete from graph_table where pair_id = '{}'"
+sql2 = "INSERT INTO graph_table(token_id,pair_id,idx,is_latest,ai0,ai1,ai2,eth0,eth1,eth2,current_score) values ('{}','{}',{},{},{},{},{},{},{},{},{})"
+sql1 = "INSERT INTO graph_table(token_id,pair_id,idx,is_latest,ai0,ai1,eth0,eth1,current_score) values ('{}','{}',{},{},{},{},{},{},{})"
+sql0 = "INSERT INTO graph_table(token_id,pair_id,idx,is_latest,ai0,eth0,current_score) values ('{}','{}',{},{},{},{},{})"
 
 
 cursor.execute(sql,timestamp)
 datas = cursor.fetchall()
+
 for data in datas:
+    token_id = data['token_id']
+    pair_id = data['pair_id']    
     idx = data['idx']
+    is_latest = 0
+    idx_remain = idx % 8 
     idx = int(idx/8)
     if(idx == 2):
-        sql4 = sql2.format(data['ai0'],data['ai8'],data['ai16'],data['eth0'],data['eth8'],data['eth16'],data['id'] )
-        cursor.execute(sql4)
+        ai0_idx = 'ai' + str(idx_remain)
+        ai1_idx = 'ai' + str(idx_remain + 8)
+        ai2_idx = 'ai' + str(idx_remain + 16)
+        eth0_idx = 'eth' + str(idx_remain)
+        eth1_idx = 'eth' + str(idx_remain + 8)
+        eth2_idx = 'eth' + str(idx_remain + 16)
+        ai0, ai1, ai2 = data[ai0_idx], data[ai1_idx], data[ai2_idx]
+        eth0, eth1, eth2 = data[eth0_idx], data[eth1_idx], data[eth2_idx] 
+        current_score = ai2
+        sql = sql9.format(pair_id)
+        cursor.execute(sql)
+        sql = sql2.format(token_id,pair_id,idx,is_latest,ai0,ai1,ai2,eth0,eth1,eth2,current_score)
+        cursor.execute(sql)
     if(idx == 1):
-        sql4 = sql1.format(data['ai0'],data['ai8'],data['eth0'],data['eth8'],data['id'] )
-        cursor.execute(sql4)
+        ai0_idx = 'ai' + str(idx_remain)
+        ai1_idx = 'ai' + str(idx_remain + 8)
+        eth0_idx = 'eth' + str(idx_remain)
+        eth1_idx = 'eth' + str(idx_remain + 8)
+        ai0, ai1 = data[ai0_idx], data[ai1_idx]
+        eth0, eth1 = data[eth0_idx], data[eth1_idx] 
+        current_score = ai1
+        sql = sql9.format(pair_id)
+        cursor.execute(sql)
+        sql = sql1.format(token_id,pair_id,idx,is_latest,ai0,ai1,eth0,eth1,current_score)
+        cursor.execute(sql)
     if(idx == 0):
-        sql4 = sql0.format(data['ai0'],data['eth0'],data['id'] )   
-        cursor.execute(sql4)
+        ai0_idx = 'ai' + str(idx_remain)
+        eth0_idx = 'eth' + str(idx_remain)
+        ai0 = data[ai0_idx]
+        eth0 = data[eth0_idx] 
+        current_score = ai0
+        sql = sql9.format(pair_id)
+        cursor.execute(sql)
+        sql = sql0.format(token_id,pair_id,idx,is_latest,ai0,eth0,current_score)
+        cursor.execute(sql)
 conn.commit()
 conn.close()
