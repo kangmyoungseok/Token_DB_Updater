@@ -348,7 +348,7 @@ for data in datas:
 # 7. 결과로 나온 Dataset을 통해서 AI 모델의 점수 계산
 dataset = pd.DataFrame(result)
 origin = dataset
-dataset = dataset.drop(columns = ['id', 'lp_avg','reserve_ETH','token_id'])
+dataset = dataset.drop(columns = ['id','reserve_ETH','token_id'])
 dataset = dataset.dropna(how='any',axis = 0)
 
 scaler = MinMaxScaler()

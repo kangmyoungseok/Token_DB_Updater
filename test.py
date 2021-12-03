@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
-dataset = pd.read_csv('./ai_feature/Dataset_v1.0.csv')
+dataset = pd.read_csv('./ai_feature/Dataset_12.01_15.csv')
 origin = dataset
 dataset = dataset.drop(columns = ['id', 'lp_avg'])
 dataset = dataset.dropna(how='any',axis = 0)
@@ -17,4 +17,5 @@ model.summary()
 result = model.predict(dataset)
 origin['predict'] = result
 
-origin.to_csv('./dataset_AIscore.csv')
+datas = origin.to_dict('records')
+
