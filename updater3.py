@@ -50,6 +50,7 @@ token00_creator, token00_decimals, reserve_ETH, tx_count, created_at_timestamp, 
 VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 '''
 
+datas = datas[156:]
 
 for data in tqdm(datas,desc="adding new tokens :"):
     try:
@@ -136,7 +137,7 @@ conn.close()
 pairs = []
 current_time = int(time.time())
 limit_time = current_time
-len(result['data']['pairs'])
+
 while(1):
     query = query_scam_iter % limit_time
     result = run_query(query) 
@@ -306,8 +307,8 @@ cursor = conn.cursor(pymysql.cursors.DictCursor)
 sql = "select * from ai_feature join pair_info on ai_feature.pair_id = pair_info.id where pair_info.created_at_timestamp > %d " %timestamp
 cursor.execute(sql)
 datas = cursor.fetchall()
-datas[0]
 result = []
+
 for data in datas:
     if(data['is_scam'] == 1):
         continue
@@ -379,7 +380,6 @@ for data in tqdm(datas,desc="input graph_table"):
         cursor.execute(sql,data['id'])
         result = cursor.fetchone()
         idx = result['idx'] + 1
-        
         #idx가 존재하면 기존에 있던 데이터에서 업데이트 수행
         ai_idx = 'ai{}'.format(idx)
         eth_idx = 'eth{}'.format(idx)

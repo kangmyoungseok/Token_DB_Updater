@@ -134,7 +134,6 @@ conn.close()
 pairs = []
 current_time = int(time.time())
 limit_time = current_time
-len(result['data']['pairs'])
 while(1):
     query = query_scam_iter % limit_time
     result = run_query(query) 
@@ -312,7 +311,7 @@ conn.close()
 # datas에 있는 토큰들에 대해서 진행
 conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='bobai3',charset='utf8mb4')
 cursor = conn.cursor(pymysql.cursors.DictCursor)
-
+timestamp = limit_time
 sql = "select * from ai_feature join pair_info on ai_feature.pair_id = pair_info.id where pair_info.created_at_timestamp > %d " %timestamp
 cursor.execute(sql)
 datas = cursor.fetchall()
