@@ -193,6 +193,7 @@ for data in tqdm(datas,desc="rugpull check: ") :
         continue
 
 conn.commit()
+conn.close()
 
 
 ## 러그풀 발생했는지에 대한 검증 이후, 발생하지 않은 토큰들에 대해서 Feature 업데이트.
@@ -373,7 +374,7 @@ conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='boba
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 sql = "select idx from graph_table where pair_id = %s"
 sql2 = "UPDATE graph_table set idx = {}, {} = {}, {} = {} where pair_id = '{}'" 
-sql3 = "insert into graph_table (token_id,pair_id,idx,is_latest,ai0,eth0) values (%s,%s,0,0,%s,%s)"
+sql3 = "insert into graph_table (token_id,pair_id,idx,is_latest,ai0,eth0) values (%s,%s,0,1,%s,%s)"
 
 for data in tqdm(datas,desc="input graph_table"):    
     try:

@@ -382,7 +382,7 @@ conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='boba
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 sql = "select idx from graph_table where pair_id = %s"
 sql2 = "UPDATE graph_table set idx = {}, {} = {}, {} = {} where pair_id = '{}'" 
-sql3 = "insert into graph_table (token_id,pair_id,idx,is_latest,ai0,eth0) values (%s,%s,0,0,%s,%s)"
+sql3 = "insert into graph_table (token_id,pair_id,idx,is_latest,ai0,eth0) values (%s,%s,0,1,%s,%s)"
 
 for data in tqdm(datas,desc="input graph_table"):    
     try:
@@ -406,4 +406,32 @@ for data in tqdm(datas,desc="input graph_table"):
         cursor.execute(sql3,(token_id, pair_id, ai0, eth0))
 
 conn.commit()
+conn.close()
 
+# 9. 3일 이내의 토큰 중, 3일 이후로 넘어간 토큰들 is_latest 수정
+conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='bobai3',charset='utf8mb4')
+cursor = conn.cursor(pymysql.cursors.DictCursor)
+timestamp = int(time.time()) - 259200
+sql = "select * from pair_info join graph_table on pair_info.id = graph_table.pair_id where pair_info.created_at_timestamp < %s and is_scam = 0 and graph_table.is_latest = 1"
+sql2 = "UPDATE graph_table set is_latest =0, idx = 2, ai0 = {}, ai1 = {}, ai2 = {},eth0 = {}, eth1 = {}, eth2 = {} where pair_id = '{}'" 
+sql1 = "UPDATE graph_table set is_latest =0, idx = 1, ai0 = {}, ai1 = {}, eth0 = {}, eth1 = {} where pair_id = '{}'" 
+sql0 = "UPDATE graph_table set is_latest =0, idx = 0, ai0 = {}, eth0 = {} where pair_id = '{}'" 
+
+
+cursor.execute(sql,timestamp)
+datas = cursor.fetchall()
+for data in datas:
+    idx = data['idx']
+    idx = int(idx/8)
+    if(idx == 2):
+        data['ai']
+        sql4 = sql2.format(data['ai0'],data['ai1'],data['ai2'],data['eth0'],data['eth1'],data['eth2'],data['id'] )
+        cursor.execute(sql4)
+    if(idx == 1):
+        sql4 = sql1.format(data['ai0'],data['ai1'],data['eth0'],data['eth1'],data['id'] )
+        cursor.execute(sql4)
+    if(idx == 0):
+        sql4 = sql0.format(data['ai0'],data['eth0'],data['id'] )   
+        cursor.execute(sql4)
+conn.commit()
+conn.close()
