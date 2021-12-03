@@ -354,7 +354,7 @@ dataset = dataset.dropna(how='any',axis = 0)
 scaler = MinMaxScaler()
 dataset[ : ] = scaler.fit_transform(dataset[ : ])
 
-model = keras.models.load_model('/home/ec2-user/Token_DB_Updater/ann96.h5')
+model = keras.models.load_model('/home/ec2-user/Token_DB_Updater/ann97.h5')
 model.summary()
 
 result = model.predict(dataset)
