@@ -18,7 +18,7 @@ cursor = conn.cursor(pymysql.cursors.DictCursor)
 sql = "select * from pair_info order by created_at_timestamp desc limit 0,1"
 cursor.execute(sql)
 datas = cursor.fetchall()
-last_timestamp = datas[0]['created_at_timestamp']
+last_timestamp = datas[0]['created_at_timestamp'] - 604800
 
 query = query_latest % str(last_timestamp)
 result = run_query(query)
@@ -50,7 +50,6 @@ token00_creator, token00_decimals, reserve_ETH, tx_count, created_at_timestamp, 
 VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 '''
 
-datas = datas[156:]
 
 for data in tqdm(datas,desc="adding new tokens :"):
     try:
@@ -62,7 +61,7 @@ for data in tqdm(datas,desc="adding new tokens :"):
         token00_symbol = data['token00.symbol']
         token00_creator = get_creatorAddress(id,token00_id)
         token00_decimals = data['token00.decimals']
-        reserveETH = data['reserveETH']
+        reserveETH = data['reserveETH'] / 2
         txCount = data['txCount']
         createdAtTimestamp = data['createdAtTimestamp']
         isChange = False
@@ -158,7 +157,7 @@ conn.close()
 sus_list = {}
 
 for pair in pairs:
-  sus_list[pair['id']] = pair['reserveETH']
+  sus_list[pair['id']] = pair['reserveETH'] 
 
 #스캠 검사 이후 DB에 입력
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
@@ -228,7 +227,7 @@ pairs = result['data']['pairs']
 
 tx_list = {}
 for pair in pairs:
-    tx_list[pair['id']] = [int(pair['txCount']) , Decimal(pair['reserveETH'])]
+    tx_list[pair['id']] = [int(pair['txCount']) , Decimal(pair['reserveETH']) / 2 ]
  
 
 for data in datas:

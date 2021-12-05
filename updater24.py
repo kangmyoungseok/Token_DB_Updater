@@ -59,7 +59,7 @@ for data in tqdm(datas,desc="adding new tokens :"):
         token00_symbol = data['token00.symbol']
         token00_creator = get_creatorAddress(id,token00_id)
         token00_decimals = data['token00.decimals']
-        reserveETH = data['reserveETH']
+        reserveETH = data['reserveETH'] / 2
         txCount = data['txCount']
         createdAtTimestamp = data['createdAtTimestamp']
         isChange = False
@@ -235,7 +235,7 @@ while(1):
 
 tx_list = {}
 for pair in pairs:
-    tx_list[pair['id']] = [int(pair['txCount']) , Decimal(pair['reserveETH'])]
+    tx_list[pair['id']] = [int(pair['txCount']) , Decimal(pair['reserveETH']) / 2 ]
  
 
 for data in datas:
