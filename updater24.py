@@ -59,7 +59,7 @@ for data in tqdm(datas,desc="adding new tokens :"):
         token00_symbol = data['token00.symbol']
         token00_creator = get_creatorAddress(id,token00_id)
         token00_decimals = data['token00.decimals']
-        reserveETH = data['reserveETH'] / 2
+        reserveETH = float(data['reserveETH'] / 2)
         txCount = data['txCount']
         createdAtTimestamp = data['createdAtTimestamp']
         isChange = False
@@ -79,7 +79,7 @@ cursor = conn.cursor()
 sql = '''
 INSERT INTO ai_feature(token_id, pair_id, mint_count, swap_count, burn_count, active_period, 
 mint_mean_period, swap_mean_period, burn_mean_period, swap_in, swap_out, lp_lock_ratio, lp_avg, lp_std, 
-lp_creator_holding_ratio, burn_ratio, token_creator_holding_ratio, created_at_timestamp, number_of_token_creation_of_creator ) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+lp_creator_holding_ratio, burn_ratio, token_creator_holding_ratio, created_at_timestamp, number_of_token_creation_of_creator,unlock_date ) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 '''
 sql2 = ''' select count(*) from pair_info where token00_creator = %s'''
 
@@ -120,7 +120,15 @@ for data in tqdm(datas,desc="get features: "):
         
         created_at_timestamp = data['createdAtTimestamp']
         cursor.execute(sql2,data['token00_creator'])
-        number_of_token_creation_of_creator = cursor.fetchone()[0] + 1
+        number_of_token_creation_of_creator = cursor.fetchone()[0] 
+
+                # Feature part 4 -> unlock_date 구하기
+        if(lp_lock_ratio > 0):
+            unlock_date = get_unlock_date(holders,data['token00_creator'])
+        else:
+            unlock_date = 0
+        
+        cursor.execute(sql,(token_id,pair_id,mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,created_at_timestamp,number_of_token_creation_of_creator,unlock_date))
                
         cursor.execute(sql,(token_id,pair_id,mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,created_at_timestamp,number_of_token_creation_of_creator))
     except Exception as e:
@@ -154,7 +162,7 @@ conn.close()
 sus_list = {}
 
 for pair in pairs:
-  sus_list[pair['id']] = pair['reserveETH']
+  sus_list[pair['id']] = float(pair['reserveETH']) / 2
 
 #스캠 검사 이후 DB에 입력
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
@@ -204,10 +212,9 @@ conn.commit()
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 timestamp = limit_time
-sql = "select * from pair_info where created_at_timestamp > %s order by created_at_timestamp desc  "
+sql = "select * from ai_feature join pair_info on pair_info.id = ai_feature.pair_id where pair_info.created_at_timestamp > %s order by pair_info.created_at_timestamp desc  "
 cursor.execute(sql,timestamp)
 datas = cursor.fetchall()
-
 cursor.close()
 
 #datas 에는 생긴지 90일 이내의 토큰들의 pair_info 테이블 정보가 들어있다.
@@ -251,6 +258,7 @@ for data in datas:
 
 conn.commit()
 conn.close()
+
 
 #5. 변화가 발생했고(True) & 스캠이 이미 발생하지 않은(false) 토큰들은 데이터를 다시 업데이트 한다.
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
@@ -297,8 +305,12 @@ for data in tqdm(datas,desc="update token feature: "):
             token_holders = get_holders(data['token00_id'])   
             burn_ratio = get_burn_ratio(token_holders)
             token_creator_holding_ratio = get_creator_ratio(token_holders,data['token00_creator'])
+            # Feature part 4 -> Unlock Time
+            if( (lp_lock_ratio >0 )  and ( (data['unlock_date'] == 0) or (data['unlock_date'] == None) ) ):
+                unlock_date = get_unlock_date(holders,data['token00_creator'])
+            
 
-            cursor.execute(sql,(mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,token_id))
+            cursor.execute(sql,(mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,unlock_date,token_id))
         except Exception as e:
             print(e)       
 
@@ -315,6 +327,11 @@ timestamp = limit_time
 sql = "select * from ai_feature join pair_info on ai_feature.pair_id = pair_info.id where pair_info.created_at_timestamp > %d " %timestamp
 cursor.execute(sql)
 datas = cursor.fetchall()
+current_time = int(time.time())
+
+for data in datas:
+    if(data['unlock_date'] == None):
+        data['unlock_date'] = 0
 
 result = []
 for data in datas:
@@ -322,6 +339,9 @@ for data in datas:
         continue
     dataset = {}
     try:
+        if( current_time - data['unlock_date'] < 259200 ):
+            data['lp_lock_ratio'] = 0
+
         dataset['token_id'] = data['token_id']
         dataset['reserve_ETH'] = data['reserve_ETH']
         dataset['id'] = data['pair_id'] 
@@ -350,6 +370,7 @@ for data in datas:
         continue
     result.append(dataset)
 
+result[0]
 
 
 # 7. 결과로 나온 Dataset을 통해서 AI 모델의 점수 계산

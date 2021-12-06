@@ -28,7 +28,6 @@ Locker_address = [
 '0xdbf72370021babafbceb05ab10f99ad275c6220a',
 '0x17e00383a843a9922bca3b280c0ade9f8ba48449',
 '0xe2fe530c047f2d85298b07d9333c05737f1435fb',
-'0xc77aab3c6d7dab46248f3cc3033c856171878bd5',
 '0x1ba00c14f9e8d1113028a14507f1394dc9310fbd',
 '0x000000000000000000000000000000000000dead' ]
 
@@ -59,6 +58,63 @@ Burn_address = [
 
 
 #################################### 함수들 구현하는 공간 #############################################
+# Bit query run 템플릿
+def bitquery_run(query):
+
+    # endpoint where you are making the request
+    
+    headers = {'X-API-KEY': 'BQYgQRzGYhzys0AOlpdpipougQJMH1J8'}
+    request = requests.post('https://graphql.bitquery.io/'
+                            '',headers=headers,
+                            json={'query': query})
+    if request.status_code == 200:
+        return request.json()
+    else:
+        print ('Query failed. return code is {}.      {}'.format(request.status_code, query))
+
+
+# Locker = '0x663a5c229c09b049e36dcc11a9b0d4a8eb9db214'
+
+locker1_query = '''
+{
+  ethereum(network: ethereum) {
+    arguments(
+      argumentType: {is: "uint256"}
+      argument: {is: "_unlock_date"}
+      smartContractAddress: {is: "0x663a5c229c09b049e36dcc11a9b0d4a8eb9db214"}
+      any: {txFrom: {is: "%s"}}
+    ) {
+      value {
+        value
+      }
+    }
+  }
+}
+
+'''
+#query = locker1_query % '0xd2a9049ca6b66e51c5068414bbbb632bd2c1df9e'
+#response = bitquery_run(query)
+#arguments = response['data']['ethereum']['arguments']
+
+locker2_query = '''
+{
+  ethereum(network: ethereum) {
+    arguments(
+      argumentType: {is: "uint256"}
+      argument: {is: "_unlockTime"}
+      smartContractAddress: {is: "0xE2fE530C047f2d85298b07D9333C05737f1435fB"}
+      any: {txFrom: {is: "%s"}}
+    ) {
+      value {
+        value
+      }
+    }
+  }
+}
+'''
+#query = locker2_query % '0x3598a907ff65a4c952c8f887d25b8ff010304d3e'
+#response = bitquery_run(query)
+#arguments = response['data']['ethereum']['arguments']
 
 ############################## Feature 구하는 함수 #########################################
 #
@@ -121,6 +177,26 @@ def get_Lock_ratio(holders):
         if(holder['address'] in Locker_address):
           return holder['share']
     return 0    
+
+def get_unlock_date(holders,creator):
+    for holder in holders:
+      if(holder['address'] == '0xe2fe530c047f2d85298b07d9333c05737f1435fb' ):
+        query = locker2_query % creator        
+      if(holder['address'] == '0x663a5c229c09b049e36dcc11a9b0d4a8eb9db214'):
+        query = locker1_query % creator
+      if(holder['address'] == '0x000000000000000000000000000000000000dead'):
+        return 2147483647 
+      try:
+        response = bitquery_run(query)
+        arguments = response['data']['ethereum']['arguments']
+        return arguments[-1]['value']['value']
+      except Exception as e:
+        print(creator)
+        print('Error in unlock_date methd')
+        print(query)
+        print(holders)
+        return -1
+
     
 def get_Creator_ratio(holders,creator_address):
     for holder in holders:
