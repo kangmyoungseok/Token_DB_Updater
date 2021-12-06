@@ -17,7 +17,6 @@ conn.commit()
 
 
 sql4 = "update ai_feature set unlock_date = %s where token_id = %s"
-data = datas[0]
 
 for data in tqdm(datas,desc="get unlock_time"):
     try:
