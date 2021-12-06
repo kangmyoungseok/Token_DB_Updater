@@ -192,7 +192,7 @@ def get_unlock_date(holders,creator):
         return arguments[-1]['value']['value']
       except Exception as e:
         print(creator)
-        print('Error in unlock_date methd')
+        print('Error in unlock_date method')
         print(query)
         print(holders)
         return -1
