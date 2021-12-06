@@ -66,7 +66,8 @@ for data in tqdm(datas,desc="adding new tokens :"):
         isScam = False
 
         data['token00_creator'] = token00_creator
-        cursor.execute(sql,(id,token0_name,token1_name,token00_id,token00_name,token00_symbol,token00_creator,token00_decimals,reserveETH,txCount,createdAtTimestamp,isChange,isScam)) 
+        cursor.execute(sql,(id,token0_name,token1_name,token00_id,token00_name,token00_symbol,token00_creator,token00_decimals,reserveETH,txCount,createdAtTimestamp,isChange,isScam))
+        conn.commit() 
     except Exception as e:
         print(e)
         
@@ -129,8 +130,7 @@ for data in tqdm(datas,desc="get features: "):
             unlock_date = 0
         
         cursor.execute(sql,(token_id,pair_id,mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,created_at_timestamp,number_of_token_creation_of_creator,unlock_date))
-               
-        cursor.execute(sql,(token_id,pair_id,mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,created_at_timestamp,number_of_token_creation_of_creator))
+        conn.commit()
     except Exception as e:
         print(e)
         
@@ -195,6 +195,7 @@ for data in tqdm(datas,desc="rugpull check: ") :
         print("러그풀 발생 before : %d , after : %d",before_ETH,current_ETH)
         cursor.execute(sql2,token_id)
         cursor.execute(sql,(token_id,pair_id,tx_id,rugpull_timestamp,before_ETH,after_ETH))
+        conn.commit()
     else:
         continue
       
@@ -266,7 +267,7 @@ cursor = conn.cursor()
 sql = '''
 UPDATE ai_feature set mint_count = %s, swap_count = %s, burn_count = %s, active_period = %s,
 mint_mean_period = %s, swap_mean_period = %s, burn_mean_period=%s, swap_in = %s, swap_out = %s, lp_lock_ratio = %s
-, lp_avg = %s, lp_std = %s, lp_creator_holding_ratio = %s, burn_ratio = %s, token_creator_holding_ratio = %s where 
+, lp_avg = %s, lp_std = %s, lp_creator_holding_ratio = %s, burn_ratio = %s, token_creator_holding_ratio = %s, unlock_date = %s where 
 token_id = %s
 '''
 
@@ -311,6 +312,7 @@ for data in tqdm(datas,desc="update token feature: "):
             
 
             cursor.execute(sql,(mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,unlock_date,token_id))
+            conn.commit()
         except Exception as e:
             print(e)       
 
@@ -418,6 +420,7 @@ for data in tqdm(datas,desc="input graph_table"):
         current_score = ai_score
         sql4 = sql2.format(idx,ai_idx,ai_score,eth_idx,eth_amount,current_score,data['id'])
         cursor.execute(sql4)
+        conn.commit()
     except:
         #idx가 존재하지 않으면, 새로운 행 추가
         token_id = data['token_id']
@@ -425,8 +428,8 @@ for data in tqdm(datas,desc="input graph_table"):
         ai0 = data['predict']
         eth0 = data['reserve_ETH']
         cursor.execute(sql3,(token_id, pair_id, ai0, eth0,ai0))
+        conn.commit()
 
-conn.commit()
 conn.close()
 
 # 9. 3일 이내의 토큰 중, 3일 이후로 넘어간 토큰들 is_latest 수정
@@ -486,5 +489,6 @@ for data in datas:
         cursor.execute(sql)
         sql = sql0.format(token_id,pair_id,idx,is_latest,ai0,eth0,current_score)
         cursor.execute(sql)
-conn.commit()
+    conn.commit()
+    
 conn.close()
