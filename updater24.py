@@ -331,6 +331,7 @@ conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='boba
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 timestamp = limit_time
 sql = "select * from ai_feature join pair_info on ai_feature.pair_id = pair_info.id where pair_info.created_at_timestamp > %d " %timestamp
+sql2 = "update ai_feature set unlock_date = %s where token_id =%s"
 cursor.execute(sql)
 datas = cursor.fetchall()
 current_time = int(time.time())
@@ -345,8 +346,13 @@ for data in datas:
         continue
     dataset = {}
     try:
-        if( current_time - data['unlock_date'] < 259200 ):
-            data['lp_lock_ratio'] = 0
+        if( data['unlock_date'] - current_time  < 259200 ):
+            holders = get_holders(data['id'])
+            unlock_date = get_unlock_date(holders,data['token00_creator'])
+            if(int(data['unlock_date']) == int(unlock_date)):
+                data['lp_lock_ratio'] = 0
+            else:
+                cursor.execute(sql2,(unlock_date,data['token_id']))
 
         dataset['token_id'] = data['token_id']
         dataset['reserve_ETH'] = data['reserve_ETH']

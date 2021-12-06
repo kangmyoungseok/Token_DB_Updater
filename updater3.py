@@ -324,6 +324,7 @@ conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='boba
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 
 sql = "select * from ai_feature join pair_info on ai_feature.pair_id = pair_info.id where pair_info.created_at_timestamp > %d " %timestamp
+sql2 = "update ai_feature set unlock_date = %s where token_id =%s"
 cursor.execute(sql)
 datas = cursor.fetchall()
 result = []
@@ -334,12 +335,13 @@ for data in datas:
         data['unlock_date'] = 0
 
 
+
 for data in datas:
     if(data['is_scam'] == 1):
         continue
     dataset = {}
     try:
-        if( current_time - data['unlock_date'] < 259200 ):
+        if( data['unlock_date'] - current_time  < 259200 ):
             data['lp_lock_ratio'] = 0
 
         dataset['token_id'] = data['token_id']
