@@ -324,7 +324,6 @@ conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='boba
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 
 sql = "select * from ai_feature join pair_info on ai_feature.pair_id = pair_info.id where pair_info.created_at_timestamp > %d " %timestamp
-sql2 = "update ai_feature set unlock_date = %s where token_id =%s"
 cursor.execute(sql)
 datas = cursor.fetchall()
 result = []
