@@ -302,6 +302,11 @@ for data in tqdm(datas,desc="update token feature:"):
             # Feature part 4 -> Unlock Time
             if( (lp_lock_ratio >0 )  and ( (data['unlock_date'] == 0) or (data['unlock_date'] == None) ) ):
                 unlock_date = get_unlock_date(holders,data['token00_creator'])
+            else:
+                try:
+                    unlock_date = data['unlock_date']
+                except:
+                    unlock_date = 0
             
             cursor.execute(sql,(mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,unlock_date,token_id))
             conn.commit()
