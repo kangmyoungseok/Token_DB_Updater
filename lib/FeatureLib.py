@@ -185,7 +185,7 @@ def get_unlock_date(holders,creator):
       if(holder['address'] == '0x663a5c229c09b049e36dcc11a9b0d4a8eb9db214'):
         query = locker1_query % creator
       if(holder['address'] == '0x000000000000000000000000000000000000dead'):
-        return 2147483647 
+        return 9999999999 
       try:
         response = bitquery_run(query)
         arguments = response['data']['ethereum']['arguments']
