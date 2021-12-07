@@ -341,6 +341,7 @@ for data in datas:
     dataset = {}
     try:
         if( data['unlock_date'] - current_time  < 259200 ):
+            print(data['pair_id'])
             data['lp_lock_ratio'] = 0
 
         dataset['token_id'] = data['token_id']

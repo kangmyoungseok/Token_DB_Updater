@@ -351,6 +351,7 @@ for data in datas:
             unlock_date = get_unlock_date(holders,data['token00_creator'])
             if(int(data['unlock_date']) == int(unlock_date)):
                 data['lp_lock_ratio'] = 0
+                print(data['pair_id'])
             else:
                 cursor.execute(sql2,(unlock_date,data['token_id']))
 
