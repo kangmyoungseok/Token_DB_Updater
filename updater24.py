@@ -346,14 +346,15 @@ for data in datas:
         continue
     dataset = {}
     try:
-        if( data['unlock_date'] - current_time  < 259200 ):
-            holders = get_holders(data['id'])
-            unlock_date = get_unlock_date(holders,data['token00_creator'])
-            if(int(data['unlock_date']) == int(unlock_date)):
-                data['lp_lock_ratio'] = 0
-                print(data['pair_id'])
-            else:
-                cursor.execute(sql2,(unlock_date,data['token_id']))
+        if(int(data['lp_lock_ratio'])> 0 ):
+            if( data['unlock_date'] - current_time  < 259200 ):
+                holders = get_holders(data['id'])
+                unlock_date = get_unlock_date(holders,data['token00_creator'])
+                if(int(data['unlock_date']) == int(unlock_date)):
+                    data['lp_lock_ratio'] = 0
+                    print(data['pair_id'])
+                else:
+                    cursor.execute(sql2,(unlock_date,data['token_id']))
 
         dataset['token_id'] = data['token_id']
         dataset['reserve_ETH'] = data['reserve_ETH']
