@@ -351,9 +351,10 @@ for data in datas:
     try:
         if(int(data['lp_lock_ratio']) > 0):
             if( data['unlock_date'] - current_time  < 259200 ):
-                print('pair[%s] : unlock after %s hour' %(data['pair_id'], (data['unlock_date'] - current_time)/3600  ))
                 data['lp_lock_ratio'] = 0
-                unlock_list.append(data['pair_id'])
+                if ( abs(data['unlock_date'] - current_time) < 604800):
+                    print('pair[%s] : unlock after %s hour' %(data['pair_id'], (data['unlock_date'] - current_time)/3600  ))
+                    unlock_list.append(data['pair_id'])
 
         dataset['token_id'] = data['token_id']
         dataset['reserve_ETH'] = data['reserve_ETH']

@@ -360,16 +360,19 @@ for data in datas:
     dataset = {}
     try:
         if(int(data['lp_lock_ratio']) > 0):
+            # unlock_date가 3일 이내면 lock_ratio를 0으로 간주하여 탐지
             if( data['unlock_date'] - current_time  < 259200 ):
+                # unlock_date가 하루 미만 남았으면 relock 가능성을 고려하여, unlock타임을 다시 가져온다.
                 if( abs(data['unlock_date'] - current_time) < 86400):
                     holders = get_holders(data['id'])
                     unlock_date = get_unlock_date(holders,data['token00_creator'])
                     if(int(data['unlock_date']) != int(unlock_date)):
                         cursor.execute(sql2,(unlock_date,data['token_id']))
-                    
-                print('pair[%s] : unlock after %s hour' %(data['pair_id'], (data['unlock_date'] - current_time)/3600  ))
+                # unlock_date가 끝난 직후에 러그풀 치는 애들이 많음. unlock date가 끝나기 전 3일 끝난 직후 1주일이 가장 위험하다고 간주.
+                if ( abs(data['unlock_date'] - current_time) < 604800):
+                    print('pair[%s] : unlock after %s hour' %(data['pair_id'], (data['unlock_date'] - current_time)/3600  ))
+                    unlock_list.append(data['pair_id'])
                 data['lp_lock_ratio'] = 0
-                unlock_list.append(data['pair_id'])
             
         dataset['token_id'] = data['token_id']
         dataset['reserve_ETH'] = data['reserve_ETH']
