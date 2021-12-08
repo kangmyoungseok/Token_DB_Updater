@@ -508,4 +508,3 @@ def is_rugpull_occur(data):
   except Exception as e:
     data['is_scam'] = False
     print(e)
-  

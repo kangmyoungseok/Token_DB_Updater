@@ -22,8 +22,14 @@ last_timestamp = datas[0]['created_at_timestamp']
 
 query = query_latest % str(last_timestamp)
 result = run_query(query)
+pair_frame = []
 switch_token(result)
-datas = pd.json_normalize(result['data']['pairs']).to_dict('records')
+for pair in result['data']['pairs']:
+    if((pair['token0']['symbol'] != 'WETH') and (pair['token1']['symbol'] !='WETH' )):
+      continue
+    pair_frame.append(pair)
+
+datas = pd.json_normalize(pair_frame).to_dict('records')
 
 if(len(datas) == 1000):
     last_timestamp = datas[-1]['createdAtTimestamp']
@@ -71,7 +77,7 @@ for data in tqdm(datas,desc="adding new tokens :"):
         cursor.execute(sql,(id,token0_name,token1_name,token00_id,token00_name,token00_symbol,token00_creator,token00_decimals,reserveETH,txCount,createdAtTimestamp,isChange,isScam)) 
         conn.commit()
     except Exception as e:
-        print(e)
+        print("error in adding new tokens: " + e)
         
 conn.commit()
 conn.close()
@@ -134,7 +140,7 @@ for data in tqdm(datas,desc="get features: "):
         cursor.execute(sql,(token_id,pair_id,mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,created_at_timestamp,number_of_token_creation_of_creator,unlock_date))
         conn.commit()
     except Exception as e:
-        print(e)
+        print("error in get features : " + e)
         
 conn.commit()
 conn.close()
@@ -197,7 +203,7 @@ for data in tqdm(datas,desc="rugpull check: ") :
                 cursor.execute(sql,(token_id,pair_id,tx_id,rugpull_timestamp,before_ETH,after_ETH))
                 conn.commit()
     except Exception as e:
-        print(e)
+        print("error in rugpull check" + e)
         continue
 
 conn.commit()
@@ -215,7 +221,6 @@ cursor.execute(sql,timestamp)
 datas = cursor.fetchall()
 
 cursor.close()
-
 
 
 
@@ -247,7 +252,7 @@ for data in datas:
             cursor.execute(sql,(tx_count,reserveETH,data['id']))
             data['is_change'] = True
     except Exception as e:
-        print(e)
+        print("error in check is_change" + e)
 
 conn.commit()
 conn.close()
@@ -311,7 +316,7 @@ for data in tqdm(datas,desc="update token feature:"):
             cursor.execute(sql,(mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,unlock_date,token_id))
             conn.commit()
         except Exception as e:
-            print(e)       
+            print("erorr in update feature" + e)       
 
 conn.commit()
 conn.close()
@@ -326,15 +331,14 @@ cursor = conn.cursor(pymysql.cursors.DictCursor)
 sql = "select * from ai_feature join pair_info on ai_feature.pair_id = pair_info.id where pair_info.created_at_timestamp > %d " %timestamp
 cursor.execute(sql)
 datas = cursor.fetchall()
-result = []
 current_time = int(time.time())
 
 for data in datas:
     if(data['unlock_date'] == None):
         data['unlock_date'] = 0
 
-
-
+unlock_list = []
+result = []
 for data in datas:
     if(data['is_scam'] == 1):
         continue
@@ -342,8 +346,9 @@ for data in datas:
     try:
         if(int(data['lp_lock_ratio']) > 0):
             if( data['unlock_date'] - current_time  < 259200 ):
-                print(data['pair_id'])
+                print('pair[%s] : unlock after %s hour' %(data['pair_id'], (data['unlock_date'] - current_time)/3600  ))
                 data['lp_lock_ratio'] = 0
+                unlock_list.append(data['pair_id'])
 
         dataset['token_id'] = data['token_id']
         dataset['reserve_ETH'] = data['reserve_ETH']
@@ -368,8 +373,7 @@ for data in datas:
         dataset['token_creator_holding_ratio'] = data['token_creator_holding_ratio']
         dataset['number_of_token_creation_of_creator'] = data['number_of_token_creation_of_creator']
     except Exception as e:
-        print(e)
-        print([tx_count,data['swap_count'],data['active_period']])
+        print("error in convert ai_feature to dataset " + e)
         continue
     result.append(dataset)
 
@@ -412,9 +416,12 @@ for data in tqdm(datas,desc="input graph_table"):
         result = cursor.fetchone()
         idx = result['idx'] + 1
         #idx가 존재하면 기존에 있던 데이터에서 업데이트 수행
-        ai_idx = 'ai{}'.format(idx)
+        ai_idx = 'ai{}'.format(idx) 
         eth_idx = 'eth{}'.format(idx)
-        ai_score = data['predict']
+        if(data['id'] in unlock_list):
+            ai_score = 99
+        else:
+            ai_score = data['predict']
         eth_amount = data['reserve_ETH']
         current_score = ai_score
         sql4 = sql2.format(idx,ai_idx,ai_score,eth_idx,eth_amount,current_score,data['id'])
@@ -423,7 +430,10 @@ for data in tqdm(datas,desc="input graph_table"):
         #idx가 존재하지 않으면, 새로운 행 추가
         token_id = data['token_id']
         pair_id = data['id']
-        ai0 = data['predict']
+        if(data['id'] in unlock_list):
+            ai0 = 99
+        else:
+            ai0 = data['predict']
         eth0 = data['reserve_ETH']
         cursor.execute(sql3,(token_id, pair_id, ai0, eth0,ai0))
     conn.commit()
