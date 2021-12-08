@@ -356,6 +356,12 @@ for data in datas:
     try:
         if(int(data['lp_lock_ratio']) > 0):
             if( data['unlock_date'] - current_time  < 259200 ):
+                if( abs(data['unlock_date'] - current_time) < 86400):
+                    holders = get_holders(data['id'])
+                    unlock_date = get_unlock_date(holders,data['token00_creator'])
+                    if(int(data['unlock_date']) != int(unlock_date)):
+                        cursor.execute(sql2,(unlock_date,data['token_id']))
+                    
                 print('pair[%s] : unlock after %s hour' %(data['pair_id'], (data['unlock_date'] - current_time)/3600  ))
                 data['lp_lock_ratio'] = 0
                 unlock_list.append(data['pair_id'])
