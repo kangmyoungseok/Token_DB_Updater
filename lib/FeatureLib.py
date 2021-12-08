@@ -24,11 +24,7 @@ proxy_contracts = [
 
 Locker_address = [
 '0x663a5c229c09b049e36dcc11a9b0d4a8eb9db214',
-'0xc77aab3c6d7dab46248f3cc3033c856171878bd5',
-'0xdbf72370021babafbceb05ab10f99ad275c6220a',
-'0x17e00383a843a9922bca3b280c0ade9f8ba48449',
 '0xe2fe530c047f2d85298b07d9333c05737f1435fb',
-'0x1ba00c14f9e8d1113028a14507f1394dc9310fbd',
 '0x000000000000000000000000000000000000dead' ]
 
 Burn_address = [
@@ -191,10 +187,9 @@ def get_unlock_date(holders,creator):
         arguments = response['data']['ethereum']['arguments']
         return arguments[-1]['value']['value']
       except Exception as e:
-        print(creator)
-        print('Error in unlock_date method')
-        print(query)
-        print(holders)
+        print('-------Error in unlock_date method------')
+        print('query : '  + query)
+        print('holders :' + holders)
         return -1
 
     
