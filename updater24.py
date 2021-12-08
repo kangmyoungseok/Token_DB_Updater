@@ -75,7 +75,8 @@ for data in tqdm(datas,desc="adding new tokens :"):
         cursor.execute(sql,(id,token0_name,token1_name,token00_id,token00_name,token00_symbol,token00_creator,token00_decimals,reserveETH,txCount,createdAtTimestamp,isChange,isScam))
         conn.commit() 
     except Exception as e:
-        print("error in adding new tokens: " + e)
+        print("error in adding new tokens")
+        print(e)
         
 conn.commit()
 conn.close()
@@ -138,7 +139,8 @@ for data in tqdm(datas,desc="get features: "):
         cursor.execute(sql,(token_id,pair_id,mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,created_at_timestamp,number_of_token_creation_of_creator,unlock_date))
         conn.commit()
     except Exception as e:
-        print("error in get features : " + e)
+        print("error in get features")
+        print(e)
         
 conn.commit()
 conn.close()
@@ -207,7 +209,8 @@ for data in tqdm(datas,desc="rugpull check: ") :
       
 
   except Exception as e:
-    print("error in rugpull check" + e)
+    print("error in rugpull check")
+    print(e)
     continue
 
 conn.commit()
@@ -261,7 +264,8 @@ for data in datas:
             cursor.execute(sql,(tx_count,reserveETH,data['id']))
             data['is_change'] = True
     except Exception as e:
-        print("error in check is_change" + e)
+        print("error in check is_change")
+        print(e)
 
 conn.commit()
 conn.close()
@@ -324,7 +328,8 @@ for data in tqdm(datas,desc="update token feature: "):
             cursor.execute(sql,(mint_count,swap_count,burn_count,active_period,mint_mean_period,swap_mean_period,burn_mean_period,swap_in,swap_out,lp_lock_ratio,lp_avg,lp_std,lp_creator_holding_ratio,burn_ratio,token_creator_holding_ratio,unlock_date,token_id))
             conn.commit()
         except Exception as e:
-            print("erorr in update feature" + e)      
+            print("erorr in update feature")
+            print(e)      
 
 conn.commit()
 conn.close()
@@ -389,7 +394,8 @@ for data in datas:
         dataset['token_creator_holding_ratio'] = data['token_creator_holding_ratio']
         dataset['number_of_token_creation_of_creator'] = data['number_of_token_creation_of_creator']
     except Exception as e:
-        print("error in convert ai_feature to dataset " + e)
+        print("error in convert ai_feature to dataset ")
+        print(e)
         continue
     result.append(dataset)
 
