@@ -65,7 +65,7 @@ for data in tqdm(datas,desc="adding new tokens :"):
         token00_symbol = data['token00.symbol']
         token00_creator = get_creatorAddress(id,token00_id)
         token00_decimals = data['token00.decimals']
-        reserveETH = float(data['reserveETH'] / 2)
+        reserveETH = float(data['reserveETH']) / 2
         txCount = data['txCount']
         createdAtTimestamp = data['createdAtTimestamp']
         isChange = False
@@ -522,3 +522,4 @@ for data in datas:
     conn.commit()
     
 conn.close()
+
