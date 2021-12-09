@@ -57,14 +57,15 @@ sql2 = 'select * from contract_group'
 cursor.execute(sql2)
 contract_groups =  cursor.fetchall()
 group_list = {}
+group_list['0x0000'] = 0
 for contract in contract_groups:
     group_list[contract['contract_address']] = contract['group_id']
 
 # Scam_contracts들 먼저 배열에 정의
-file_list = os.listdir('/home/ec2-user/Token_DB_Updater/scam_contract/')
+file_list = os.listdir('./scam_contract/')
 scam_contracts = []
 for file in  file_list:
-  file = '/home/ec2-user/Token_DB_Updater/scam_contract/' + file
+  file = './scam_contract/' + file
   with open(file, 'r', encoding='utf-8-sig', newline='') as input_file :
       groupcode = input_file.read()
       scam_contracts.append({'address' : file[-46:-4] ,'groupcode' : groupcode})
@@ -86,6 +87,7 @@ for data in tqdm(datas,desc="adding new tokens :"):
         isChange = False
         isScam = False
         verified,address,similarity = check_similarity(scam_contracts,token00_id)
+        print(similarity)
         contract_group = group_list[address]    #그룹 아이디로 넣을 것.
         data['token00_creator'] = token00_creator
         cursor.execute(sql,(id,token0_name,token1_name,token00_id,token00_name,token00_symbol,token00_creator,token00_decimals,reserveETH,txCount,createdAtTimestamp,isChange,isScam,verified,contract_group,similarity)) 

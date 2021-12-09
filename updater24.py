@@ -59,6 +59,7 @@ sql2 = 'select * from contract_group'
 cursor.execute(sql2)
 contract_groups =  cursor.fetchall()
 group_list = {}
+group_list['0x0000'] = 0
 for contract in contract_groups:
     group_list[contract['contract_address']] = contract['group_id']
 
