@@ -531,10 +531,10 @@ def check_similarity(scam_contracts,token_id):
       groupcode = scam_contract['groupcode']
       address = scam_contract['address']
       simratio = similar(sourcecode, groupcode)
-    
-    if(simratio > max_simratio):
-      max_simratio = simratio
-      max_address = address
+      if(simratio > max_simratio):
+        max_simratio = simratio
+        max_address = address
+        
     return verified,max_address,max_simratio
 
   except Exception as e:
