@@ -11,6 +11,7 @@ from tensorflow import keras
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+import os
 
 #1. 기존 파일에 존재하는 가장 최신 토큰이후에 생긴 토큰 DB에 추가
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
@@ -46,16 +47,28 @@ if(len(datas) == 1000):
         datas3 = pd.json_normalize(result['data']['pairs']).to_dict('records')
         datas.extend(datas3)
 
-
-
-
-
 sql = '''
 INSERT INTO pair_info(id, token0_name,token1_name, token00_id, token00_name, token00_symbol, 
-token00_creator, token00_decimals, reserve_ETH, tx_count, created_at_timestamp, is_change, is_scam) 
-VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+token00_creator, token00_decimals, reserve_ETH, tx_count, created_at_timestamp, is_change, is_scam, verified, contract_group, similarity ) 
+VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 '''
 
+sql2 = 'select * from contract_group'
+cursor.execute(sql2)
+contract_groups =  cursor.fetchall()
+group_list = {}
+for contract in contract_groups:
+    group_list[contract['contract_address']] = contract['group_id']
+
+# Scam_contracts들 먼저 배열에 정의
+file_list = os.listdir('/home/ec2-user/Token_DB_Updater/scam_contract/')
+scam_contracts = []
+for file in  file_list:
+  file = '/home/ec2-user/Token_DB_Updater/scam_contract/' + file
+  with open(file, 'r', encoding='utf-8-sig', newline='') as input_file :
+      groupcode = input_file.read()
+      scam_contracts.append({'address' : file[-46:-4] ,'groupcode' : groupcode})
+      
 
 for data in tqdm(datas,desc="adding new tokens :"):
     try:
@@ -72,9 +85,10 @@ for data in tqdm(datas,desc="adding new tokens :"):
         createdAtTimestamp = data['createdAtTimestamp']
         isChange = False
         isScam = False
-
+        verified,address,similarity = check_similarity(scam_contracts,token00_id)
+        contract_group = group_list[address]    #그룹 아이디로 넣을 것.
         data['token00_creator'] = token00_creator
-        cursor.execute(sql,(id,token0_name,token1_name,token00_id,token00_name,token00_symbol,token00_creator,token00_decimals,reserveETH,txCount,createdAtTimestamp,isChange,isScam)) 
+        cursor.execute(sql,(id,token0_name,token1_name,token00_id,token00_name,token00_symbol,token00_creator,token00_decimals,reserveETH,txCount,createdAtTimestamp,isChange,isScam,verified,contract_group,similarity)) 
         conn.commit()
     except Exception as e:
         print("error in adding new tokens")

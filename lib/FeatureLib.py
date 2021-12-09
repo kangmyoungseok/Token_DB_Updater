@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import re
 from math import sqrt
 from decimal import Decimal
+from difflib import SequenceMatcher
+
 
 ######################## 상수 값들 저장하는 공간 ##########################
 proxy_contracts = [
@@ -502,4 +504,39 @@ def is_rugpull_occur(data):
         data['is_scam'] = False
   except Exception as e:
     data['is_scam'] = False
+    print(e)
+
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
+
+
+def check_similarity(scam_contracts,token_id):
+  try:
+    repos_url = 'https://api.etherscan.io/api?module=contract&action=getsourcecode&address='+token_id+'&apiKey=A78Z2CZPJI82R1QCSCDX61P4HF9KQXGX8D'
+    response = requests.get(repos_url).text
+    result = json.loads(response)
+    sourcecode = result["result"][0]["SourceCode"]
+    abi = result["result"][0]['ABI']
+
+    # abi를 통해서 verified 되었는지 확인
+    if 'Contract source code not verified' in abi :
+      verified = 0
+      return verified,'0x0000',0
+    else:
+      verified = 1
+    
+    # scam_contracts에서 유사도 검증을 통해서 가장 유사한 컨트랙트와, 유사도 점수를 구해서 리턴
+    max_simratio = 0
+    for scam_contract in scam_contracts:
+      groupcode = scam_contract['groupcode']
+      address = scam_contract['address']
+      simratio = similar(sourcecode, groupcode)
+    
+    if(simratio > max_simratio):
+      max_simratio = simratio
+      max_address = address
+    return verified,max_address,max_simratio
+
+  except Exception as e:
+    print("Error in check_similarity method")
     print(e)

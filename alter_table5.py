@@ -15,18 +15,27 @@ from lib.FeatureLib import *
 from tqdm import tqdm
 from difflib import SequenceMatcher
 
-
-def similar(a, b):
-    return SequenceMatcher(None, a, b).ratio()
-
-path_dir = './scam_contract/'  #폴더 경로
-
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor(pymysql.cursors.DictCursor)
-sql1 = "alter table contract_group drop count"
-cursor.execute(sql1)
+
+sql = '''CREATE TABLE contract_group(
+    group_id tinyint,
+    contract_address char(50),
+    PRIMARY KEY(group_id)
+) CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+'''
+cursor.execute(sql) 
+
+
+sql2 = "alter table pair_info add verified tinyint after created_at_timestamp"
+sql3 = "alter table pair_info add contract_group tinyint after verified"
+sql4 = "alter table pair_info add similarity int after contract_group"
+cursor.execute(sql2)
+cursor.execute(sql3)
+cursor.execute(sql4)
 
 #그룹 결과 파일과 유사도 비교
+path_dir = '/home/ec2-user/Token_DB_Updater/scam_contract/'  #폴더 경로
 file_list = os.listdir(path_dir)
 
 sql = "Insert into contract_group(group_id,contract_address) values ({},'{}')"
@@ -37,4 +46,3 @@ for list in file_list:
     sql2 = sql.format(index,list[:-4])
     cursor.execute(sql2)
 conn.commit()
-
