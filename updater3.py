@@ -62,10 +62,10 @@ for contract in contract_groups:
     group_list[contract['contract_address']] = contract['group_id']
 
 # Scam_contracts들 먼저 배열에 정의
-file_list = os.listdir('./scam_contract/')
+file_list = os.listdir('/home/ec2-user/Token_DB_Updater/scam_contract/')
 scam_contracts = []
 for file in  file_list:
-  file = './scam_contract/' + file
+  file = '/home/ec2-user/Token_DB_Updater/scam_contract/' + file
   with open(file, 'r', encoding='utf-8-sig', newline='') as input_file :
       groupcode = input_file.read()
       scam_contracts.append({'address' : file[-46:-4] ,'groupcode' : groupcode})
