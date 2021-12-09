@@ -18,21 +18,6 @@ from difflib import SequenceMatcher
 conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 
-sql = '''CREATE TABLE contract_group(
-    group_id tinyint,
-    contract_address char(50),
-    PRIMARY KEY(group_id)
-) CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-'''
-cursor.execute(sql) 
-
-
-sql2 = "alter table pair_info add verified tinyint after created_at_timestamp"
-sql3 = "alter table pair_info add contract_group tinyint after verified"
-sql4 = "alter table pair_info add similarity int after contract_group"
-cursor.execute(sql2)
-cursor.execute(sql3)
-cursor.execute(sql4)
 
 #그룹 결과 파일과 유사도 비교
 path_dir = '/home/ec2-user/Token_DB_Updater/scam_contract/'  #폴더 경로
