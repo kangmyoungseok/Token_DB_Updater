@@ -461,3 +461,46 @@ for data in tqdm(datas,desc="input graph_table"):
         cursor.execute(sql3,(token_id, pair_id, ai0, eth0,ai0))
     conn.commit()
 conn.close()
+
+
+#9. Warning 검증
+conn = pymysql.connect(host='localhost', user='root', password='bobai123', db='bobai3', charset='utf8mb4') 
+cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+# scam_address 배열에 먼저 선언
+sql = "select token00_creator from pair_info where is_scam = 1"
+cursor.execute(sql)
+datas = cursor.fetchall()
+
+scam_address = []
+for data in datas:
+    scam_address.append(data['token00_creator'])
+
+# 정상인 토큰들 DB에서 불러오기
+sql3 = "select * from pair_info join ai_feature on pair_info.id = ai_feature.pair_id where is_scam = 0"
+cursor.execute(sql3)
+datas = cursor.fetchall()
+
+# 모든 정상 토큰들에 대해서 Warning 라벨링 하기
+for data in datas:
+    try:
+        data['warning'] = 0
+        if(data['similarity'] == None):
+            data['similarity'] = 0
+        if(data['similarity'] > 0.9):
+            data['warning'] = 3
+        
+        swap_rate = data['swap_in'] / (data['swap_out'] + 1)
+        if(swap_rate > 10):
+            data['warning'] = 2
+
+        if(data['token00_creator'] in scam_address):
+            data['warning'] = 1
+    except Exception as e:
+        print("error in warning")
+        print(e)
+
+sql4 = "update pair_info set warning = %s where id = %s"
+for data in datas:
+    cursor.execute(sql4,(data['warning'],data['id']))
+    conn.commit()
