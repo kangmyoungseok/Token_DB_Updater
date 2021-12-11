@@ -487,7 +487,7 @@ conn.close()
 # 9. 3일 이내의 토큰 중, 3일 이후로 넘어간 토큰들 is_latest 수정
 conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='bobai3',charset='utf8mb4')
 cursor = conn.cursor(pymysql.cursors.DictCursor)
-timestamp = int(time.time()) - 259200
+timestamp = int(time.time()) - 200000
 sql = "select * from pair_info join graph_table on pair_info.id = graph_table.pair_id where pair_info.created_at_timestamp < %s and is_scam = 0 and graph_table.is_latest = 1"
 sql9 = "delete from graph_table where pair_id = '{}'"
 sql2 = "INSERT INTO graph_table(token_id,pair_id,idx,is_latest,ai0,ai1,ai2,eth0,eth1,eth2,current_score) values ('{}','{}',{},{},{},{},{},{},{},{},{})"
