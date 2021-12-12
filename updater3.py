@@ -491,7 +491,7 @@ for data in datas:
             data['warning'] = 3
         
         swap_rate = data['swap_in'] / (data['swap_out'] + 1)
-        if(swap_rate > 10):
+        if(swap_rate > 15):
             data['warning'] = 2
 
         if(data['token00_creator'] in scam_address):
