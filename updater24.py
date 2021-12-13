@@ -264,7 +264,7 @@ while(1):
     result = run_query(query) 
     pairs.extend(result['data']['pairs'])
     limit_time = int(result['data']['pairs'][999]['createdAtTimestamp'])
-    if( (current_time - limit_time) > 1296000):
+    if( (current_time - limit_time) > 12960000):
       break
 
 
