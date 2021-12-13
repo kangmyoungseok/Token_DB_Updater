@@ -574,7 +574,7 @@ for data in datas:
             data['warning'] = 3
         
         swap_rate = data['swap_in'] / (data['swap_out'] + 1)
-        if(swap_rate > 10):
+        if(swap_rate > 15):
             data['warning'] = 2
 
         if(data['token00_creator'] in scam_address):
@@ -586,4 +586,13 @@ for data in datas:
 sql4 = "update pair_info set warning = %s where id = %s"
 for data in datas:
     cursor.execute(sql4,(data['warning'],data['id']))
+    conn.commit()
+
+
+sql5 = "select * from pair_info join graph_table on pair_info.id = graph_table.pair_id where is_scam = 0 and current_score > 98 and warning = 0"
+cursor.execute(sql5)
+datas = cursor.fetchall()
+
+for data in datas:
+    cursor.execute(sql4,(4,data['id']))
     conn.commit()

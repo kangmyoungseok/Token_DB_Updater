@@ -504,3 +504,12 @@ sql4 = "update pair_info set warning = %s where id = %s"
 for data in datas:
     cursor.execute(sql4,(data['warning'],data['id']))
     conn.commit()
+
+
+sql5 = "select * from pair_info join graph_table on pair_info.id = graph_table.pair_id where is_scam = 0 and current_score > 98 and warning = 0"
+cursor.execute(sql5)
+datas = cursor.fetchall()
+
+for data in datas:
+    cursor.execute(sql4,(4,data['id']))
+    conn.commit()
