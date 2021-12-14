@@ -360,7 +360,7 @@ conn.close()
 conn = pymysql.connect(host='localhost',user='root',password='bobai123',db='bobai3',charset='utf8mb4')
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 timestamp = limit_time
-sql = "select * from ai_feature join pair_info on ai_feature.pair_id = pair_info.id where pair_info.created_at_timestamp > %d " %timestamp
+sql = "select * from ai_feature join pair_info on ai_feature.pair_id = pair_info.id where pair_info.created_at_timestamp > %d and pair_info.tx_count > 0" %timestamp
 sql2 = "update ai_feature set unlock_date = %s where token_id =%s"
 cursor.execute(sql)
 datas = cursor.fetchall()
@@ -380,18 +380,19 @@ for data in datas:
     try:
         if(int(data['lp_lock_ratio']) > 0):
             # unlock_date가 3일 이내면 lock_ratio를 0으로 간주하여 탐지
-            if( data['unlock_date'] - current_time  < 300000 ):
-                # unlock_date가 하루 미만 남았으면 relock 가능성을 고려하여, unlock타임을 다시 가져온다.
-                if( abs(data['unlock_date'] - current_time) < 86400):
-                    holders = get_holders(data['id'])
-                    unlock_date = get_unlock_date(holders,data['token00_creator'])
-                    if(int(data['unlock_date']) != int(unlock_date)):
-                        cursor.execute(sql2,(unlock_date,data['token_id']))
-                # unlock_date가 끝난 직후에 러그풀 치는 애들이 많음. unlock date가 끝나기 전 3일 끝난 직후 1주일이 가장 위험하다고 간주.
-                if ( abs(data['unlock_date'] - current_time) < 604800):
-                    print('pair[%s] : unlock after %s hour' %(data['pair_id'], (data['unlock_date'] - current_time)/3600  ))
-                    unlock_list.append(data['pair_id'])
+            if( data['unlock_date'] - current_time  < 400000 ):
                 data['lp_lock_ratio'] = 0
+                if(data['unlock_date'] - current_time < 300000):
+                # unlock_date가 하루 미만 남았으면 relock 가능성을 고려하여, unlock타임을 다시 가져온다.
+                    if( abs(data['unlock_date'] - current_time) < 86400):
+                        holders = get_holders(data['id'])
+                        unlock_date = get_unlock_date(holders,data['token00_creator'])
+                        if(int(data['unlock_date']) != int(unlock_date)):
+                            cursor.execute(sql2,(unlock_date,data['token_id']))
+                    # unlock_date가 끝난 직후에 러그풀 치는 애들이 많음. unlock date가 끝나기 전 3일 끝난 직후 1주일이 가장 위험하다고 간주.
+                    if ( abs(data['unlock_date'] - current_time) < 604800):
+                        print('pair[%s] : unlock after %s hour' %(data['pair_id'], (data['unlock_date'] - current_time)/3600  ))
+                        unlock_list.append(data['pair_id'])
             
         dataset['token_id'] = data['token_id']
         dataset['reserve_ETH'] = data['reserve_ETH']
@@ -559,6 +560,12 @@ scam_address = []
 for data in datas:
     scam_address.append(data['token00_creator'])
 
+scam_address2 = []
+for scam in scam_address:
+    if(scam_address.count(scam) > 1  ):
+        scam_address2.append(scam)
+
+
 # 정상인 토큰들 DB에서 불러오기
 sql3 = "select * from pair_info join ai_feature on pair_info.id = ai_feature.pair_id where is_scam = 0"
 cursor.execute(sql3)
@@ -577,7 +584,7 @@ for data in datas:
         if(swap_rate > 15):
             data['warning'] = 2
 
-        if(data['token00_creator'] in scam_address):
+        if(data['token00_creator'] in scam_address2):
             data['warning'] = 1
     except Exception as e:
         print("error in warning")
@@ -589,7 +596,7 @@ for data in datas:
     conn.commit()
 
 
-sql5 = "select * from pair_info join graph_table on pair_info.id = graph_table.pair_id where is_scam = 0 and current_score > 98 and warning = 0"
+sql5 = "select * from pair_info join graph_table on pair_info.id = graph_table.pair_id where is_scam = 0 and graph_table.current_score > 98 and warning = 0"
 cursor.execute(sql5)
 datas = cursor.fetchall()
 

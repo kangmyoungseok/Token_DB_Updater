@@ -366,11 +366,12 @@ for data in datas:
     dataset = {}
     try:
         if(int(data['lp_lock_ratio']) > 0):
-            if( data['unlock_date'] - current_time  < 300000 ):
+            if( data['unlock_date'] - current_time  < 400000 ):
                 data['lp_lock_ratio'] = 0
-                if ( abs(data['unlock_date'] - current_time) < 604800):
-                    print('pair[%s] : unlock after %s hour' %(data['pair_id'], (data['unlock_date'] - current_time)/3600  ))
-                    unlock_list.append(data['pair_id'])
+                if(data['unlock_date'] - current_time < 300000):
+                    if ( abs(data['unlock_date'] - current_time) < 604800):
+                        print('pair[%s] : unlock after %s hour' %(data['pair_id'], (data['unlock_date'] - current_time)/3600  ))
+                        unlock_list.append(data['pair_id'])
 
         dataset['token_id'] = data['token_id']
         dataset['reserve_ETH'] = data['reserve_ETH']
@@ -476,6 +477,12 @@ scam_address = []
 for data in datas:
     scam_address.append(data['token00_creator'])
 
+
+scam_address2 = []
+for scam in scam_address:
+    if(scam_address.count(scam) > 1  ):
+        scam_address2.append(scam)
+
 # 정상인 토큰들 DB에서 불러오기
 sql3 = "select * from pair_info join ai_feature on pair_info.id = ai_feature.pair_id where is_scam = 0"
 cursor.execute(sql3)
@@ -494,7 +501,7 @@ for data in datas:
         if(swap_rate > 15):
             data['warning'] = 2
 
-        if(data['token00_creator'] in scam_address):
+        if(data['token00_creator'] in scam_address2):
             data['warning'] = 1
     except Exception as e:
         print("error in warning")
@@ -506,7 +513,7 @@ for data in datas:
     conn.commit()
 
 
-sql5 = "select * from pair_info join graph_table on pair_info.id = graph_table.pair_id where is_scam = 0 and current_score > 98 and warning = 0"
+sql5 = "select * from pair_info join graph_table on pair_info.id = graph_table.pair_id where is_scam = 0 and graph_table.current_score > 98 and warning = 0"
 cursor.execute(sql5)
 datas = cursor.fetchall()
 
