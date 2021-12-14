@@ -39,6 +39,6 @@ for data in good_predict_list:
         correct = correct + 1
 
 print("정상 예측 정탐 : [%d / %d ]" % (correct, len(good_predict_list)))
-print("정상 예측 오탐 : [%d / %d ]" % (len(good_predict_list) - correct), len(good_predict_list))
+print("정상 예측 오탐 : [%d / %d ]" % (len(good_predict_list) - correct, len(good_predict_list)))
 
 
