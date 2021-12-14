@@ -31,7 +31,7 @@ for data in scam_predict_list:
         correct = correct + 1
 
 print("스캠 예측 정탐 [%d / %d ] " % (correct,len(scam_predict_list)))
-print("스캠 예측 오탐 [%d / %d ] " % (len(scam_predict_list) - correct . len(scam_predict_list)))
+print("스캠 예측 오탐 [%d / %d ] " % (len(scam_predict_list) - correct , len(scam_predict_list)))
 
 correct = 0
 for data in good_predict_list:
