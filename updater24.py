@@ -380,7 +380,7 @@ for data in datas:
     try:
         if(int(data['lp_lock_ratio']) > 0):
             # unlock_date가 3일 이내면 lock_ratio를 0으로 간주하여 탐지
-            if( data['unlock_date'] - current_time  < 259200 ):
+            if( data['unlock_date'] - current_time  < 300000 ):
                 # unlock_date가 하루 미만 남았으면 relock 가능성을 고려하여, unlock타임을 다시 가져온다.
                 if( abs(data['unlock_date'] - current_time) < 86400):
                     holders = get_holders(data['id'])
