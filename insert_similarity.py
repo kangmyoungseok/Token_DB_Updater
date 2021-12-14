@@ -32,7 +32,7 @@ for file in  file_list:
       scam_contracts.append({'address' : file[-46:-4] ,'groupcode' : groupcode})
       
 # 전체 데이터 불러오기
-sql2 = "select * from pair_info where is_scam = 0 order by created_at_timestamp desc"
+sql2 = "select * from pair_info where is_scam = 0 and verified is null order by created_at_timestamp desc "
 cursor.execute(sql2)
 datas = cursor.fetchall()
 
