@@ -596,10 +596,11 @@ for data in datas:
     conn.commit()
 
 
-sql5 = "select * from pair_info join graph_table on pair_info.id = graph_table.pair_id where is_scam = 0 and graph_table.current_score > 98 and warning = 0"
+sql5 = "select * from pair_info join graph_table on pair_info.id = graph_table.pair_id where is_scam = 0 and graph_table.current_score > 98 and warning = 0 order by created_at_timestamp desc"
 cursor.execute(sql5)
 datas = cursor.fetchall()
 
+datas = datas[20:]
 for data in datas:
     cursor.execute(sql4,(4,data['id']))
     conn.commit()
